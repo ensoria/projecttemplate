@@ -1,28 +1,28 @@
 package user
 
 import (
-	"github.com/nolafw/config/pkg/appconfig"
-	"github.com/nolafw/config/pkg/registry"
-	usergrpc "github.com/nolafw/projecttemplate/internal/module/user/controller/grpc"
-	"github.com/nolafw/projecttemplate/internal/module/user/controller/http"
-	"github.com/nolafw/projecttemplate/internal/module/user/controller/ws"
-	"github.com/nolafw/projecttemplate/internal/module/user/service"
-	"github.com/nolafw/projecttemplate/internal/plamo/dikit"
-	"github.com/nolafw/rest/pkg/rest"
-	"github.com/nolafw/websocket/pkg/wsconfig"
+	"github.com/ensoria/config/pkg/appconfig"
+	"github.com/ensoria/config/pkg/registry"
+	usergrpc "github.com/ensoria/projecttemplate/internal/module/user/controller/grpc"
+	"github.com/ensoria/projecttemplate/internal/module/user/controller/http"
+	"github.com/ensoria/projecttemplate/internal/module/user/controller/ws"
+	"github.com/ensoria/projecttemplate/internal/module/user/service"
+	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	"github.com/ensoria/rest/pkg/rest"
+	"github.com/ensoria/websocket/pkg/wsconfig"
 
-	"github.com/nolafw/projecttemplate/internal/infra/connection/grpcclt"
-	pbPost "github.com/nolafw/projecttemplate/service/adapter/post"
-	pb "github.com/nolafw/projecttemplate/service/adapter/user"
+	"github.com/ensoria/projecttemplate/internal/infra/connection/grpcclt"
+	pbPost "github.com/ensoria/projecttemplate/service/adapter/post"
+	pb "github.com/ensoria/projecttemplate/service/adapter/user"
 )
 
-// TODO: nolacliでモジュールを作成したら、このファイルに
+// TODO: encliでモジュールを作成したら、このファイルに
 // 自動的に、NewModuleと、Constructorsを追加する
 // さらに、moduler.goにもimportを追加すること
 
 const ModuleName = "user"
 
-// TODO: 便利機能として、この関数も自動的にnolacliで生成する
+// TODO: 便利機能として、この関数も自動的にencliで生成する
 func Params() (*appconfig.Parameters, error) {
 	return registry.ModuleParams(ModuleName)
 }

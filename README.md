@@ -1,6 +1,6 @@
-# Nolaフレームワーク プロジェクトテンプレート
+# Ensoriaフレームワーク プロジェクトテンプレート
 
-`nolacli install [directory_name]`でインストールされるプロジェクトのテンプレートです。
+`encli install [directory_name]`でインストールされるプロジェクトのテンプレートです。
 
 現在実装中。
 

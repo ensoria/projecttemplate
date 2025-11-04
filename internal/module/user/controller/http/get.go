@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/nolafw/projecttemplate/internal/module/user/dto"
-	"github.com/nolafw/projecttemplate/internal/module/user/service"
-	"github.com/nolafw/rest/pkg/rest"
+	"github.com/ensoria/projecttemplate/internal/module/user/dto"
+	"github.com/ensoria/projecttemplate/internal/module/user/service"
+	"github.com/ensoria/rest/pkg/rest"
 )
 
 // RESTでのresponse

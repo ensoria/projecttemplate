@@ -1,4 +1,4 @@
-# nola専用のdockerのイメージを使って、ECS/EKS向けのコンテナイメージを作成する
+# ensoria専用のdockerのイメージを使って、ECS/EKS向けのコンテナイメージを作成する
 
 # TODO: コンパイルした`main`から、globalとそれぞれのmoduleのconfigのyamlをどう読み込むか?
 # コンテナに、それらのファイルも全て含める? そうすると、結構Dockerfileの記述が複雑になる。

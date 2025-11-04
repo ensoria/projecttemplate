@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/nolafw/projecttemplate/internal/module/user/dto"
-	"github.com/nolafw/projecttemplate/internal/module/user/service"
-	"github.com/nolafw/projecttemplate/internal/plamo/vkit"
-	"github.com/nolafw/rest/pkg/rest"
-	"github.com/nolafw/validator/pkg/rule"
+	"github.com/ensoria/projecttemplate/internal/module/user/dto"
+	"github.com/ensoria/projecttemplate/internal/module/user/service"
+	"github.com/ensoria/projecttemplate/internal/plamo/vkit"
+	"github.com/ensoria/rest/pkg/rest"
+	"github.com/ensoria/validator/pkg/rule"
 )
 
 type Post struct {

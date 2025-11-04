@@ -3,11 +3,11 @@ package grpcclt
 import (
 	"context"
 
+	"github.com/ensoria/grpcgear/pkg/interceptor/metadata/metaclt"
+	"github.com/ensoria/grpcgear/pkg/interceptor/retry/retryclt"
+	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/google/uuid"
-	"github.com/nolafw/grpcgear/pkg/interceptor/metadata/metaclt"
-	"github.com/nolafw/grpcgear/pkg/interceptor/retry/retryclt"
-	"github.com/nolafw/projecttemplate/internal/plamo/dikit"
-	"github.com/nolafw/projecttemplate/internal/plamo/logkit"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -19,7 +19,7 @@ func NewUserPostConnection(lc dikit.LC) (grpc.ClientConnInterface, error) {
 	metadataConfig := &metaclt.ClientMetadataConfig{
 		StaticMetadata: map[string]string{
 			"x-api-version": "v1",
-			"x-app-name":    "nolafw",
+			"x-app-name":    "ensoria",
 		},
 		RequestIDKey: "x-request-id",
 		RequestIdGenerator: func() string {

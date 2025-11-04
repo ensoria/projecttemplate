@@ -3,8 +3,8 @@ package http
 import (
 	"net/http"
 
-	"github.com/nolafw/projecttemplate/internal/module/post/service"
-	"github.com/nolafw/rest/pkg/rest"
+	"github.com/ensoria/projecttemplate/internal/module/post/service"
+	"github.com/ensoria/rest/pkg/rest"
 )
 
 type Get struct {

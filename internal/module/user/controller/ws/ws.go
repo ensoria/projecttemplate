@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nolafw/projecttemplate/internal/module/user/service"
-	"github.com/nolafw/websocket/pkg/wsconfig"
-	"github.com/nolafw/websocket/pkg/wsevent"
-	"github.com/nolafw/websocket/pkg/wssend"
+	"github.com/ensoria/projecttemplate/internal/module/user/service"
+	"github.com/ensoria/websocket/pkg/wsconfig"
+	"github.com/ensoria/websocket/pkg/wsevent"
+	"github.com/ensoria/websocket/pkg/wssend"
 )
 
 // 接続開始時のハンドラ

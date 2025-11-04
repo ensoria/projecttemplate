@@ -1,12 +1,12 @@
 package order
 
 import (
-	"github.com/nolafw/config/pkg/appconfig"
-	"github.com/nolafw/config/pkg/registry"
-	"github.com/nolafw/projecttemplate/internal/module/order/controller/http"
-	"github.com/nolafw/projecttemplate/internal/module/order/service"
-	"github.com/nolafw/projecttemplate/internal/plamo/dikit"
-	"github.com/nolafw/rest/pkg/rest"
+	"github.com/ensoria/config/pkg/appconfig"
+	"github.com/ensoria/config/pkg/registry"
+	"github.com/ensoria/projecttemplate/internal/module/order/controller/http"
+	"github.com/ensoria/projecttemplate/internal/module/order/service"
+	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	"github.com/ensoria/rest/pkg/rest"
 )
 
 const ModuleName = "order"

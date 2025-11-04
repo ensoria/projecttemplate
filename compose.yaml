@@ -1,6 +1,6 @@
 services:
   localstack:
-    container_name: "nola-localstack"
+    container_name: "ensoria-localstack"
     image: localstack/localstack
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
@@ -12,7 +12,7 @@ services:
       - DB_PORT=${DB_PORT:-5432}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
-      - DB_NAME=${DB_NAME:-nola}
+      - DB_NAME=${DB_NAME:-ensoria}
       - AWS_ACCESS_KEY_ID=dummy
       - AWS_SECRET_ACCESS_KEY=dummy
     volumes:

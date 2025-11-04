@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"github.com/nolafw/projecttemplate/internal/bootstrap"
-	"github.com/nolafw/projecttemplate/internal/scheduler"
+	"github.com/ensoria/projecttemplate/internal/bootstrap"
+	"github.com/ensoria/projecttemplate/internal/scheduler"
 )
 
 // main entry point

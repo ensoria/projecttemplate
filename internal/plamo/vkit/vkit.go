@@ -1,10 +1,10 @@
 package vkit
 
 import (
-	"github.com/nolafw/rest/pkg/rest"
-	"github.com/nolafw/validator/pkg/rule"
-	"github.com/nolafw/validator/pkg/validate"
-	"github.com/nolafw/validator/pkg/verr"
+	"github.com/ensoria/rest/pkg/rest"
+	"github.com/ensoria/validator/pkg/rule"
+	"github.com/ensoria/validator/pkg/validate"
+	"github.com/ensoria/validator/pkg/verr"
 )
 
 // validate.HttpRequestBodyFieldFirst か、

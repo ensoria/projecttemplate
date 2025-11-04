@@ -39,4 +39,4 @@ aws --endpoint-url http://localhost:4566 secretsmanager create-secret \
     --description 'test secret 2' \
     --secret-string '{"SECRET_VALUE_3":"value3","SECRET_VALUE_4":"value4"}'
 
-echo "Initialized for the nola project!"
+echo "Initialized for the Ensoria project!"

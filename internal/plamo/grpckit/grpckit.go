@@ -1,9 +1,9 @@
 package grpckit
 
 import (
-	"github.com/nolafw/grpcgear/pkg/interceptor/logging"
-	"github.com/nolafw/grpcgear/pkg/interceptor/logging/logsrv"
-	"github.com/nolafw/grpcgear/pkg/interceptor/recovery/recoverysrv"
+	"github.com/ensoria/grpcgear/pkg/interceptor/logging"
+	"github.com/ensoria/grpcgear/pkg/interceptor/logging/logsrv"
+	"github.com/ensoria/grpcgear/pkg/interceptor/recovery/recoverysrv"
 	"google.golang.org/grpc"
 )
 

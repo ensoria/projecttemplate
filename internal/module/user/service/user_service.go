@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	order "github.com/nolafw/projecttemplate/internal/module/order/service"
-	pbPost "github.com/nolafw/projecttemplate/service/adapter/post"
+	order "github.com/ensoria/projecttemplate/internal/module/order/service"
+	pbPost "github.com/ensoria/projecttemplate/service/adapter/post"
 )
 
 // サービスを別のモジュールから使う場合は、

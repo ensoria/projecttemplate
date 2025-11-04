@@ -1,14 +1,14 @@
 package post
 
 import (
-	"github.com/nolafw/config/pkg/appconfig"
-	"github.com/nolafw/config/pkg/registry"
-	postgrpc "github.com/nolafw/projecttemplate/internal/module/post/controller/grpc"
-	"github.com/nolafw/projecttemplate/internal/module/post/controller/http"
-	"github.com/nolafw/projecttemplate/internal/module/post/service"
-	"github.com/nolafw/projecttemplate/internal/plamo/dikit"
-	pb "github.com/nolafw/projecttemplate/service/adapter/post"
-	"github.com/nolafw/rest/pkg/rest"
+	"github.com/ensoria/config/pkg/appconfig"
+	"github.com/ensoria/config/pkg/registry"
+	postgrpc "github.com/ensoria/projecttemplate/internal/module/post/controller/grpc"
+	"github.com/ensoria/projecttemplate/internal/module/post/controller/http"
+	"github.com/ensoria/projecttemplate/internal/module/post/service"
+	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	pb "github.com/ensoria/projecttemplate/service/adapter/post"
+	"github.com/ensoria/rest/pkg/rest"
 )
 
 const ModuleName = "post"

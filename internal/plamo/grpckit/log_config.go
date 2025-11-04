@@ -4,8 +4,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/nolafw/grpcgear/pkg/interceptor/logging"
-	"github.com/nolafw/grpcgear/pkg/interceptor/logging/logsrv"
+	"github.com/ensoria/grpcgear/pkg/interceptor/logging"
+	"github.com/ensoria/grpcgear/pkg/interceptor/logging/logsrv"
 	"google.golang.org/grpc/codes"
 )
 

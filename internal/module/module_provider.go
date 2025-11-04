@@ -1,9 +1,9 @@
 package module
 
 import (
-	_ "github.com/nolafw/projecttemplate/internal/module/order"
-	_ "github.com/nolafw/projecttemplate/internal/module/post"
-	_ "github.com/nolafw/projecttemplate/internal/module/user"
+	_ "github.com/ensoria/projecttemplate/internal/module/order"
+	_ "github.com/ensoria/projecttemplate/internal/module/post"
+	_ "github.com/ensoria/projecttemplate/internal/module/user"
 )
 
 func init() {

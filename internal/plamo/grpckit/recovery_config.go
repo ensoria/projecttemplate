@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/nolafw/grpcgear/pkg/interceptor/logging"
-	"github.com/nolafw/grpcgear/pkg/interceptor/recovery/recoverysrv"
+	"github.com/ensoria/grpcgear/pkg/interceptor/logging"
+	"github.com/ensoria/grpcgear/pkg/interceptor/recovery/recoverysrv"
 )
 
 func CreateBasicPanicLogFuncs(logger logging.Logger) (recoverysrv.LogUnaryPanicFunc, recoverysrv.LogStreamPanicFunc) {

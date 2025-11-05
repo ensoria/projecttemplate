@@ -13,6 +13,17 @@ var (
 	onceForLog sync.Once
 )
 
+// Ensoria共通のLoggerインターフェース
+// github.com/ensoriaのリポジトリごとに、Loggerの定義が別れているが、
+// interfaceの内容はこのLoggerインターフェースと同じなため
+// EnsoriaプロジェクトでLoggerを使う場合は、このinterfaceを使うことを推奨する。
+type EnsoriaLogger interface {
+	Debug(msg string, args ...any)
+	Info(msg string, args ...any)
+	Warn(msg string, args ...any)
+	Error(msg string, args ...any)
+}
+
 // どのloggerを使うかは自由です。
 // 用途にあったloggerを定義してください。
 // ここで作成されているloggerをそのまま使っても問題ありませんが、

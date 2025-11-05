@@ -7,6 +7,8 @@ import (
 
 	"log/slog"
 
+	"github.com/ensoria/mb/pkg/mb"
+	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 )
@@ -156,6 +158,15 @@ func RegisterGRPCServerLifecycle(lc LC, grpcSrv *grpc.Server) {
 			slog.Info("Shutting down gRPC server")
 			grpcSrv.GracefulStop()
 			return nil
+		},
+	})
+}
+
+func RegisterMBSubscriberLifecycle(lc LC, subConn mb.Subscriber) {
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			logkit.Info("Shutting down MB subscriber")
+			return subConn.Close()
 		},
 	})
 }

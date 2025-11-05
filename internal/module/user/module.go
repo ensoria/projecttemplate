@@ -1,15 +1,21 @@
 package user
 
 import (
+	"context"
+
 	"github.com/ensoria/config/pkg/appconfig"
 	"github.com/ensoria/config/pkg/registry"
+	"github.com/ensoria/mb/pkg/mb"
 	usergrpc "github.com/ensoria/projecttemplate/internal/module/user/controller/grpc"
 	"github.com/ensoria/projecttemplate/internal/module/user/controller/http"
+	usermb "github.com/ensoria/projecttemplate/internal/module/user/controller/mb"
 	"github.com/ensoria/projecttemplate/internal/module/user/controller/ws"
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/websocket/pkg/wsconfig"
+	"go.uber.org/fx"
 
 	"github.com/ensoria/projecttemplate/internal/infra/connection/grpcclt"
 	pbPost "github.com/ensoria/projecttemplate/service/adapter/post"
@@ -27,6 +33,7 @@ func Params() (*appconfig.Parameters, error) {
 	return registry.ModuleParams(ModuleName)
 }
 
+// rest
 func NewModule(get *http.Get, post *http.Post) *rest.Module {
 	return &rest.Module{
 		Path: "/user",
@@ -35,6 +42,7 @@ func NewModule(get *http.Get, post *http.Post) *rest.Module {
 	}
 }
 
+// websocket
 func NewWebSocketModule(onOpen *ws.OnOpen, onMessage *ws.OnMessage) *wsconfig.Module {
 	module := wsconfig.NewDefaultModule("/ws/" + ModuleName)
 	// for logging
@@ -45,6 +53,18 @@ func NewWebSocketModule(onOpen *ws.OnOpen, onMessage *ws.OnMessage) *wsconfig.Mo
 	module.AddOnMessageMiddleware(ws.LogOnMessage)
 	module.OnMessage = onMessage.OnMessage()
 	return module
+}
+
+func NewSubscribeModule(lc dikit.LC, subscribe mb.StartSubscription, handler mb.SubscribeHandler) {
+
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			logkit.Info("start subscribing to hello_world")
+			return subscribe("hello_world", handler,
+				mb.WithErrorStrategy(mb.ErrorStrategyDiscard),
+			)
+		},
+	})
 }
 
 func init() {
@@ -62,6 +82,20 @@ func init() {
 		// gRPC server
 		dikit.AsGRPCService(usergrpc.NewUserGRPCService),
 		dikit.Bind[pb.UserServer](usergrpc.NewUserGRPCService),
+
+		// TODO: ここを、dikitを使って、うまい具合にまとめる
+		// MB Subscriber
+		fx.Provide(
+			usermb.NewUserSubscriber,
+			fx.As(new(mb.SubscribeHandler)),
+			fx.ResultTags(`name:"UserSubscriber"`),
+		),
+		fx.Invoke(
+			fx.Annotate(
+				NewSubscribeModule,
+				fx.ParamTags(``, ``, `name:"UserSubscriber"`),
+			),
+		),
 
 		// gRPC client
 		// 別のgRPCサーバーのクライアントが必要な場合は、コンストラクタを追加

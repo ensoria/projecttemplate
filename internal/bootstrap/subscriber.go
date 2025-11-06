@@ -10,30 +10,32 @@ import (
 	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 )
 
-func NewSubscriberConnection(lc dikit.LC) (mb.Subscriber, error) {
-	// TODO: configから取得するようにする
-	// configにはメッセージブローカーの実装がないので、configで実装してから変更
-	config := &mb.Config{
-		Type: mb.TypeRabbitMQ,
-		URL:  "amqp://localhost:5672/",
-		Credentials: &mb.Credentials{
-			Username: "myuser",
-			Password: "mypassword",
-		},
+func NewSubscriberApp(envVal *string) func(lc dikit.LC) (mb.Subscriber, error) {
+	return func(lc dikit.LC) (mb.Subscriber, error) {
+		// TODO: envValを使って、その環境の値をconfigから取得するようにする
+		// configにはメッセージブローカーの実装がないので、configで実装してから変更
+		config := &mb.Config{
+			Type: mb.TypeRabbitMQ,
+			URL:  "amqp://localhost:5672/",
+			Credentials: &mb.Credentials{
+				Username: "myuser",
+				Password: "mypassword",
+			},
+		}
+
+		subConn, err := mq.NewSubscriber(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create subscriber: %w", err)
+		}
+
+		subConn.SetOptions(
+			mb.WithLogger(logkit.Logger()),
+			mb.WithPanicHandler(&SubscriberPanicHandler{}),
+		)
+		dikit.RegisterMBSubscriberOnStopLifecycle(lc, subConn)
+
+		return subConn, nil
 	}
-
-	subConn, err := mq.NewSubscriber(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create subscriber: %w", err)
-	}
-
-	subConn.SetOptions(
-		mb.WithLogger(logkit.Logger()),
-		mb.WithPanicHandler(&SubscriberPanicHandler{}),
-	)
-	dikit.RegisterMBSubscriberOnStopLifecycle(lc, subConn)
-
-	return subConn, nil
 }
 
 func NewSubscribe(subConn mb.Subscriber) mb.StartSubscription {

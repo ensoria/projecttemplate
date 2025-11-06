@@ -61,6 +61,7 @@ func NewSubscribeModule(lc dikit.LC, subscribe mb.StartSubscription, handler mb.
 			mb.WithErrorStrategy(mb.ErrorStrategyDiscard),
 		)
 	}
+	// Subscriberは、onStartを定義したら、RegisterMBSubscriberOnStartLifecycleに登録する
 	dikit.RegisterMBSubscriberOnStartLifecycle(lc, onStart)
 }
 
@@ -91,6 +92,7 @@ func init() {
 		dikit.InjectGRPCClient(pbPost.NewPostClient, grpcclt.PostConnName),
 	})
 
+	// IMPORTANT! メッセージブローカーの場合は、constructorsではなく、invocationsに登録する
 	dikit.AppendInvocations([]any{
 		dikit.InjectSubscriber(NewSubscribeModule, "UserSubscriber"),
 	})

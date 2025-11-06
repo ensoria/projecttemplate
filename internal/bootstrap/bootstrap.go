@@ -24,19 +24,18 @@ func Run(envVal *string) {
 	dikit.AppendConstructors([]any{
 		NewHTTPApp(envVal),
 		NewGRPCApp(envVal),
-		dikit.AsHTTPPipeline(CreateHTTPPipeline),
-		dikit.AsWSRouter(CreateWSRouter),
+		dikit.InjectHTTPModules(CreateHTTPPipeline),
+		dikit.InjectWSModules(CreateWSRouter),
 
 		// メッセージブローカーのSubscriber接続を提供
-		NewSubscriberConnection,
+		NewSubscriberApp(envVal),
 		NewSubscribe,
 	})
 
 	dikit.AppendInvocations([]any{
 		dikit.RegisterGRPCServices(),
 	})
-	// TODO: メッセージブローカーは、httpサーバーとは別にライフサイクル用のcontext.Contextが必要
-	// fxのライフサイクルで、メッセージブローカーのcontext.Contextを含める必要がある
+
 	// TODO: putputFxLogは、環境変数で変えれるようにする
 	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), true)
 }

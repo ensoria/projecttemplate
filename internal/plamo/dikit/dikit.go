@@ -40,6 +40,8 @@ func Invocations() []any {
 	return invocations
 }
 
+// === Providers ===
+
 func ProvideAs[T any](concrete any) any {
 	return fx.Annotate(concrete, fx.As(new(T)))
 }
@@ -74,6 +76,8 @@ func AsGRPCService(f any) any {
 	)
 }
 
+// === Injectors ===
+
 // 汎用版 - 複数の引数位置に対してタグを指定可能
 // 例:
 // dikit.InjectWithTags(SomeConstructor, “, `name:"Something"`, `group:"items"`),
@@ -81,11 +85,11 @@ func InjectWithTags(constructor any, tags ...string) any {
 	return fx.Annotate(constructor, fx.ParamTags(tags...))
 }
 
-func AsHTTPPipeline(f any) any {
+func InjectHTTPModules(f any) any {
 	return fx.Annotate(f, fx.ParamTags(`group:"http_modules"`))
 }
 
-func AsWSRouter(f any) any {
+func InjectWSModules(f any) any {
 	return fx.Annotate(f, fx.ParamTags(`group:"ws_modules"`))
 }
 
@@ -104,20 +108,7 @@ func InjectGRPCClient(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
 }
 
-func ProvideAndRun(constructors []any, invocations []any, outputFxLog bool) {
-	options := []fx.Option{
-		fx.Provide(
-			constructors...,
-		),
-		fx.Invoke(invocations...),
-	}
-
-	if !outputFxLog {
-		options = append(options, fx.NopLogger)
-	}
-
-	fx.New(options...).Run()
-}
+// === invocations ===
 
 func RegisterGRPCServices() any {
 	return fx.Annotate(
@@ -208,4 +199,21 @@ func RegisterMBSubscriberOnStopLifecycle(lc LC, subConn mb.Subscriber) {
 			return subConn.Close()
 		},
 	})
+}
+
+// 汎用的なfxアプリケーションの提供と実行
+
+func ProvideAndRun(constructors []any, invocations []any, outputFxLog bool) {
+	options := []fx.Option{
+		fx.Provide(
+			constructors...,
+		),
+		fx.Invoke(invocations...),
+	}
+
+	if !outputFxLog {
+		options = append(options, fx.NopLogger)
+	}
+
+	fx.New(options...).Run()
 }

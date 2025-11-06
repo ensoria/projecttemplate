@@ -1,6 +1,6 @@
 services:
-  localstack:
-    container_name: "ensoria-localstack"
+  ensoria-projecttemplate-localstack:
+    container_name: "ensoria-projecttemplate-localstack"
     image: localstack/localstack
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
@@ -20,4 +20,18 @@ services:
       # https://docs.localstack.cloud/references/init-hooks/#lifecycle-stages-and-hooks
       - "./.localstack/init:/etc/localstack/init"
       - "/var/run/docker.sock:/var/run/docker.sock"
+  ensoria-projecttemplate-rabbitmq:
+    image: rabbitmq:4-management
+    container_name: ensoria-mb-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=myuser
+      - RABBITMQ_DEFAULT_PASS=mypassword
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  rabbitmq-data:
 

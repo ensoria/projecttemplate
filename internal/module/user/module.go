@@ -56,15 +56,13 @@ func NewWebSocketModule(onOpen *ws.OnOpen, onMessage *ws.OnMessage) *wsconfig.Mo
 }
 
 func NewSubscribeModule(lc dikit.LC, subscribe mb.StartSubscription, handler mb.SubscribeHandler) {
-
-	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			logkit.Info("start subscribing to hello_world")
-			return subscribe("hello_world", handler,
-				mb.WithErrorStrategy(mb.ErrorStrategyDiscard),
-			)
-		},
-	})
+	onStart := func(ctx context.Context) error {
+		logkit.Info("start subscribing to hello_world")
+		return subscribe("hello_world", handler,
+			mb.WithErrorStrategy(mb.ErrorStrategyDiscard),
+		)
+	}
+	dikit.RegisterMBSubscriberOnStartLifecycle(lc, onStart)
 }
 
 func init() {
@@ -83,19 +81,8 @@ func init() {
 		dikit.AsGRPCService(usergrpc.NewUserGRPCService),
 		dikit.Bind[pb.UserServer](usergrpc.NewUserGRPCService),
 
-		// TODO: ここを、dikitを使って、うまい具合にまとめる
 		// MB Subscriber
-		fx.Provide(
-			usermb.NewUserSubscriber,
-			fx.As(new(mb.SubscribeHandler)),
-			fx.ResultTags(`name:"UserSubscriber"`),
-		),
-		fx.Invoke(
-			fx.Annotate(
-				NewSubscribeModule,
-				fx.ParamTags(``, ``, `name:"UserSubscriber"`),
-			),
-		),
+		dikit.BindNamed[mb.SubscribeHandler](usermb.NewUserSubscriber, "UserSubscriber"),
 
 		// gRPC client
 		// 別のgRPCサーバーのクライアントが必要な場合は、コンストラクタを追加
@@ -103,5 +90,12 @@ func init() {
 		// gRPCクライアントのコンストラクタは、`dikit.InjectNamed`を使って、どの
 		// gRPCコネクションを使うかを指定すること
 		dikit.InjectNamed(pbPost.NewPostClient, grpcclt.PostConnName),
+	})
+
+	dikit.AppendInvocations([]any{
+		fx.Annotate(
+			NewSubscribeModule,
+			fx.ParamTags(``, ``, `name:"UserSubscriber"`),
+		),
 	})
 }

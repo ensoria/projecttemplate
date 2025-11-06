@@ -18,17 +18,26 @@ type GRPCServiceRegistrar interface {
 	RegisterWithServer(*grpc.Server)
 }
 
-var constructors = []any{}
-
 type LC = fx.Lifecycle
 
-func AppendConstructors(adding []any) error {
+var constructors = []any{}
+
+func AppendConstructors(adding []any) {
 	constructors = append(constructors, adding...)
-	return nil
 }
 
 func Constructors() []any {
 	return constructors
+}
+
+var invocations = []any{}
+
+func AppendInvocations(adding []any) {
+	invocations = append(invocations, adding...)
+}
+
+func Invocations() []any {
+	return invocations
 }
 
 func AsHTTPModule(f any) any {
@@ -65,6 +74,10 @@ func Bind[T any](concrete any) any {
 	return fx.Annotate(concrete, fx.As(new(T)))
 }
 
+func BindNamed[T any](concrete any, tag string) any {
+	return fx.Annotate(concrete, fx.As(new(T)), fx.ResultTags(`name:"`+tag+`"`))
+}
+
 // FIXME: これは、引数が1つの時しか使えない。そのため、基本的にgRPCのときのみなので
 // 関数名を別のに変える
 // InjectNamedとセットで使う - 結果に名前を付けて提供
@@ -79,12 +92,12 @@ func InjectNamed(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
 }
 
-func ProvideAndRun(constructors []any, invocation any, outputFxLog bool) {
+func ProvideAndRun(constructors []any, invocations []any, outputFxLog bool) {
 	options := []fx.Option{
 		fx.Provide(
 			constructors...,
 		),
-		fx.Invoke(invocation),
+		fx.Invoke(invocations...),
 	}
 
 	if !outputFxLog {
@@ -115,6 +128,7 @@ func RegisterGRPCServices() any {
 	)
 }
 
+// HTTP/WebSocket controllers lifecycle registration
 func RegisterHTTPServerLifecycle(lc LC, srv *http.Server) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
@@ -133,6 +147,7 @@ func RegisterHTTPServerLifecycle(lc LC, srv *http.Server) {
 	})
 }
 
+// gRPC server lifecycle registration
 func RegisterGRPCServerLifecycle(lc LC, grpcSrv *grpc.Server) {
 	if grpcSrv == nil {
 		return
@@ -162,7 +177,19 @@ func RegisterGRPCServerLifecycle(lc LC, grpcSrv *grpc.Server) {
 	})
 }
 
-func RegisterMBSubscriberLifecycle(lc LC, subConn mb.Subscriber) {
+// MB Subscriber Start lifecycle registration
+// Message Broker Subscriber start lifecycle registration is separate
+// from stopping lifecycle registration
+func RegisterMBSubscriberOnStartLifecycle(lc LC, onStart func(ctx context.Context) error) {
+	lc.Append(fx.Hook{
+		OnStart: onStart,
+	})
+}
+
+// MB Subscriber Stop lifecycle registration
+// Message Broker Subscriber stop lifecycle registration
+// is separate from starting lifecycle registration
+func RegisterMBSubscriberOnStopLifecycle(lc LC, subConn mb.Subscriber) {
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			logkit.Info("Shutting down MB subscriber")

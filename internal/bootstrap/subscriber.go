@@ -31,7 +31,7 @@ func NewSubscriberConnection(lc dikit.LC) (mb.Subscriber, error) {
 		mb.WithLogger(logkit.Logger()),
 		mb.WithPanicHandler(&SubscriberPanicHandler{}),
 	)
-	dikit.RegisterMBSubscriberLifecycle(lc, subConn)
+	dikit.RegisterMBSubscriberOnStopLifecycle(lc, subConn)
 
 	return subConn, nil
 }

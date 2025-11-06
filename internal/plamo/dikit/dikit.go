@@ -42,14 +42,18 @@ func Invocations() []any {
 
 // === Providers ===
 
+// Tのインターフェースに対して、該当するconcreteが1つだけの場合に使う
 func ProvideAs[T any](concrete any) any {
 	return fx.Annotate(concrete, fx.As(new(T)))
 }
 
+// Tのインターフェースに対して、該当するconcreteが複数ある場合に、
+// タグ付きで登録することで注入する際にどのconcreteかを指定できる
 func ProvideAsNamed[T any](concrete any, tag string) any {
 	return fx.Annotate(concrete, fx.As(new(T)), fx.ResultTags(`name:"`+tag+`"`))
 }
 
+// TODO: ProvideAsNamedとの違いは?
 func ProvideNamed(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ResultTags(`name:"`+tag+`"`))
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/websocket/pkg/wsconfig"
-	"go.uber.org/fx"
 
 	"github.com/ensoria/projecttemplate/internal/infra/connection/grpcclt"
 	pbPost "github.com/ensoria/projecttemplate/service/adapter/post"
@@ -93,9 +92,6 @@ func init() {
 	})
 
 	dikit.AppendInvocations([]any{
-		fx.Annotate(
-			NewSubscribeModule,
-			fx.ParamTags(``, ``, `name:"UserSubscriber"`),
-		),
+		dikit.InjectSubscriber(NewSubscribeModule, "UserSubscriber"),
 	})
 }

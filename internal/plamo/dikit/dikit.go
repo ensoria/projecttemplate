@@ -78,6 +78,13 @@ func BindNamed[T any](concrete any, tag string) any {
 	return fx.Annotate(concrete, fx.As(new(T)), fx.ResultTags(`name:"`+tag+`"`))
 }
 
+func InjectSubscriber(constructor any, tag string) any {
+	return fx.Annotate(
+		constructor,
+		fx.ParamTags(``, ``, `name:"`+tag+`"`),
+	)
+}
+
 // FIXME: これは、引数が1つの時しか使えない。そのため、基本的にgRPCのときのみなので
 // 関数名を別のに変える
 // InjectNamedとセットで使う - 結果に名前を付けて提供

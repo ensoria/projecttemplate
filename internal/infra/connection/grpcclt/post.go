@@ -48,6 +48,7 @@ func NewUserPostConnection(lc dikit.LC) (grpc.ClientConnInterface, error) {
 		return nil, err
 	}
 
+	// TODO: dikitの関数に移す
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
 			return conn.Close()

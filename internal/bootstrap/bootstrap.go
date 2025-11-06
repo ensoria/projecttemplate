@@ -32,6 +32,7 @@ func Run(envVal *string) {
 		NewSubscribe,
 	})
 
+	// TODO: constructorとinvocationの使い分けがいまいち分からないので調べる
 	dikit.AppendInvocations([]any{
 		dikit.RegisterGRPCServices(),
 	})

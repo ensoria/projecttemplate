@@ -66,7 +66,7 @@ func NewSubscribeModule(lc dikit.LC, subscribe mb.StartSubscription, handler mb.
 
 func init() {
 	dikit.AppendConstructors([]any{
-		dikit.As[service.UserService](service.NewUserService),
+		dikit.ProvideAs[service.UserService](service.NewUserService),
 		http.NewGet,
 		http.NewPost,
 		dikit.AsHTTPModule(NewModule),
@@ -78,10 +78,10 @@ func init() {
 
 		// gRPC server
 		dikit.AsGRPCService(usergrpc.NewUserGRPCService),
-		dikit.As[pb.UserServer](usergrpc.NewUserGRPCService),
+		dikit.ProvideAs[pb.UserServer](usergrpc.NewUserGRPCService),
 
 		// MB Subscriber
-		dikit.AsNamed[mb.SubscribeHandler](usermb.NewUserSubscriber, "UserSubscriber"),
+		dikit.ProvideAsNamed[mb.SubscribeHandler](usermb.NewUserSubscriber, "UserSubscriber"),
 
 		// gRPC client
 		// 別のgRPCサーバーのクライアントが必要な場合は、コンストラクタを追加

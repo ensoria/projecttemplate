@@ -40,6 +40,18 @@ func Invocations() []any {
 	return invocations
 }
 
+func ProvideAs[T any](concrete any) any {
+	return fx.Annotate(concrete, fx.As(new(T)))
+}
+
+func ProvideAsNamed[T any](concrete any, tag string) any {
+	return fx.Annotate(concrete, fx.As(new(T)), fx.ResultTags(`name:"`+tag+`"`))
+}
+
+func ProvideNamed(constructor any, tag string) any {
+	return fx.Annotate(constructor, fx.ResultTags(`name:"`+tag+`"`))
+}
+
 func AsHTTPModule(f any) any {
 	return fx.Annotate(
 		f,
@@ -54,14 +66,6 @@ func AsWSModule(f any) any {
 	)
 }
 
-func AsHTTPPipeline(f any) any {
-	return fx.Annotate(f, fx.ParamTags(`group:"http_modules"`))
-}
-
-func AsWSRouter(f any) any {
-	return fx.Annotate(f, fx.ParamTags(`group:"ws_modules"`))
-}
-
 func AsGRPCService(f any) any {
 	return fx.Annotate(
 		f,
@@ -70,23 +74,19 @@ func AsGRPCService(f any) any {
 	)
 }
 
-func As[T any](concrete any) any {
-	return fx.Annotate(concrete, fx.As(new(T)))
-}
-
-func AsNamed[T any](concrete any, tag string) any {
-	return fx.Annotate(concrete, fx.As(new(T)), fx.ResultTags(`name:"`+tag+`"`))
-}
-
-func Named(constructor any, tag string) any {
-	return fx.Annotate(constructor, fx.ResultTags(`name:"`+tag+`"`))
-}
-
 // 汎用版 - 複数の引数位置に対してタグを指定可能
 // 例:
 // dikit.InjectWithTags(SomeConstructor, “, `name:"Something"`, `group:"items"`),
 func InjectWithTags(constructor any, tags ...string) any {
 	return fx.Annotate(constructor, fx.ParamTags(tags...))
+}
+
+func AsHTTPPipeline(f any) any {
+	return fx.Annotate(f, fx.ParamTags(`group:"http_modules"`))
+}
+
+func AsWSRouter(f any) any {
+	return fx.Annotate(f, fx.ParamTags(`group:"ws_modules"`))
 }
 
 // Subscriber注入用

@@ -26,11 +26,11 @@ func NewModule(get *http.Get) *rest.Module {
 
 func init() {
 	dikit.AppendConstructors([]any{
-		dikit.As[service.PostService](service.NewPostService),
+		dikit.ProvideAs[service.PostService](service.NewPostService),
 		http.NewGet,
 		dikit.AsHTTPModule(NewModule),
 		// gRPC
 		dikit.AsGRPCService(postgrpc.NewPostGRPCService),
-		dikit.As[pb.PostServer](postgrpc.NewPostGRPCService),
+		dikit.ProvideAs[pb.PostServer](postgrpc.NewPostGRPCService),
 	})
 }

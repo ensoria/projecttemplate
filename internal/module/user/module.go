@@ -88,7 +88,7 @@ func init() {
 		// このコンストラクタが必要な`grpc.ClientConnInterface`は、`service/connection`で定義する
 		// gRPCクライアントのコンストラクタは、`dikit.InjectNamed`を使って、どの
 		// gRPCコネクションを使うかを指定すること
-		dikit.InjectNamed(pbPost.NewPostClient, grpcclt.PostConnName),
+		dikit.InjectGRPCClient(pbPost.NewPostClient, grpcclt.PostConnName),
 	})
 
 	dikit.AppendInvocations([]any{

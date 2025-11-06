@@ -78,6 +78,18 @@ func BindNamed[T any](concrete any, tag string) any {
 	return fx.Annotate(concrete, fx.As(new(T)), fx.ResultTags(`name:"`+tag+`"`))
 }
 
+func ProvideNamed(constructor any, tag string) any {
+	return fx.Annotate(constructor, fx.ResultTags(`name:"`+tag+`"`))
+}
+
+// 汎用版 - 複数の引数位置に対してタグを指定可能
+// 例:
+// dikit.InjectWithTags(SomeConstructor, “, `name:"Something"`, `group:"items"`),
+func InjectWithTags(constructor any, tags ...string) any {
+	return fx.Annotate(constructor, fx.ParamTags(tags...))
+}
+
+// Subscriber注入用
 func InjectSubscriber(constructor any, tag string) any {
 	return fx.Annotate(
 		constructor,
@@ -85,17 +97,10 @@ func InjectSubscriber(constructor any, tag string) any {
 	)
 }
 
-// FIXME: これは、引数が1つの時しか使えない。そのため、基本的にgRPCのときのみなので
-// 関数名を別のに変える
-// InjectNamedとセットで使う - 結果に名前を付けて提供
-func ProvideNamed(constructor any, tag string) any {
-	return fx.Annotate(constructor, fx.ResultTags(`name:"`+tag+`"`))
-}
-
-// FIXME: これは、引数が1つの時しか使えない。そのため、基本的にgRPCのときのみなので
-// 関数名を別のに変える
-// ProvideNamedとセットで使う - 名前で依存を注入
-func InjectNamed(constructor any, tag string) any {
+// gRPCクライアントの注入用
+// 実際には引数が1つだけの場合は汎用的に使えますが、
+// 汎用的に使いたい場合は、別の関数を用意するか、IbjectWithTagsを使ってください。
+func InjectGRPCClient(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
 }
 

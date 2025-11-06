@@ -70,15 +70,15 @@ func AsGRPCService(f any) any {
 	)
 }
 
-func Bind[T any](concrete any) any {
+func As[T any](concrete any) any {
 	return fx.Annotate(concrete, fx.As(new(T)))
 }
 
-func BindNamed[T any](concrete any, tag string) any {
+func AsNamed[T any](concrete any, tag string) any {
 	return fx.Annotate(concrete, fx.As(new(T)), fx.ResultTags(`name:"`+tag+`"`))
 }
 
-func ProvideNamed(constructor any, tag string) any {
+func Named(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ResultTags(`name:"`+tag+`"`))
 }
 

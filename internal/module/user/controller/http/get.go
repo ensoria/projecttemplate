@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ensoria/mb/pkg/mb"
 	"github.com/ensoria/projecttemplate/internal/module/user/dto"
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
 	"github.com/ensoria/rest/pkg/rest"
@@ -14,11 +15,13 @@ import (
 
 type Get struct {
 	Service service.UserService
+	Publish mb.Publish
 }
 
-func NewGet(service service.UserService) *Get {
+func NewGet(service service.UserService, publish mb.Publish) *Get {
 	return &Get{
 		Service: service,
+		Publish: publish,
 	}
 }
 
@@ -27,6 +30,9 @@ func (c *Get) Handle(r *rest.Request) *rest.Response {
 	fmt.Println("here? 1")
 	c.Service.Something() // DEBUG:
 	fmt.Println("here? 2")
+
+	c.Publish("hello_world", []byte("Hello, World!"), map[string]string{"source": "Get.Handle"})
+
 	return &rest.Response{
 		Xml:        true,
 		Code:       http.StatusOK,

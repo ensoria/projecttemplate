@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/ensoria/config/pkg/appconfig"
 	"github.com/ensoria/config/pkg/registry"
@@ -12,7 +13,6 @@ import (
 	"github.com/ensoria/projecttemplate/internal/module/user/controller/ws"
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/websocket/pkg/wsconfig"
 
@@ -56,13 +56,13 @@ func NewWebSocketModule(onOpen *ws.OnOpen, onMessage *ws.OnMessage) *wsconfig.Mo
 
 func NewSubscribeModule(lc dikit.LC, subscribe mb.StartSubscription, handler mb.SubscribeHandler) {
 	onStart := func(ctx context.Context) error {
-		logkit.Info("start subscribing to hello_world")
+		slog.Info("start subscribing to hello_world")
 		return subscribe("hello_world", handler,
 			mb.WithErrorStrategy(mb.ErrorStrategyDiscard),
 		)
 	}
 	// Subscriberは、onStartを定義したら、RegisterMBSubscriberOnStartLifecycleに登録する
-	dikit.RegisterMBSubscriberOnStartLifecycle(lc, onStart)
+	dikit.RegisterOnStartLifecycle(lc, onStart)
 }
 
 func init() {

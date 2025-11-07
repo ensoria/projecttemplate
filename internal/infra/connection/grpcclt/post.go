@@ -8,7 +8,6 @@ import (
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/google/uuid"
-	"go.uber.org/fx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -48,12 +47,10 @@ func NewUserPostConnection(lc dikit.LC) (grpc.ClientConnInterface, error) {
 		return nil, err
 	}
 
-	// TODO: dikitの関数に移す
-	lc.Append(fx.Hook{
-		OnStop: func(ctx context.Context) error {
-			return conn.Close()
-		},
-	})
+	onStop := func(ctx context.Context) error {
+		return conn.Close()
+	}
+	dikit.RegisterOnStopLifecycle(lc, onStop)
 
 	return conn, nil
 }

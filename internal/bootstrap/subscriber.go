@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/ensoria/mb/pkg/mb"
 	"github.com/ensoria/mb/pkg/mq"
@@ -32,7 +33,12 @@ func NewSubscriberApp(envVal *string) func(lc dikit.LC) (mb.Subscriber, error) {
 			mb.WithLogger(logkit.Logger()),
 			mb.WithPanicHandler(&SubscriberPanicHandler{}),
 		)
-		dikit.RegisterMBSubscriberOnStopLifecycle(lc, subConn)
+
+		onStop := func(ctx context.Context) error {
+			slog.Info("Shutting down MB subscriber")
+			return subConn.Close()
+		}
+		dikit.RegisterOnStopLifecycle(lc, onStop)
 
 		return subConn, nil
 	}

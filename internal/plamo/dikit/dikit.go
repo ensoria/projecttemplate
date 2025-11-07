@@ -7,8 +7,6 @@ import (
 
 	"log/slog"
 
-	"github.com/ensoria/mb/pkg/mb"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 )
@@ -184,24 +182,15 @@ func RegisterGRPCServerLifecycle(lc LC, grpcSrv *grpc.Server) {
 	})
 }
 
-// MB Subscriber Start lifecycle registration
-// Message Broker Subscriber start lifecycle registration is separate
-// from stopping lifecycle registration
-func RegisterMBSubscriberOnStartLifecycle(lc LC, onStart func(ctx context.Context) error) {
+func RegisterOnStartLifecycle(lc LC, onStart func(ctx context.Context) error) {
 	lc.Append(fx.Hook{
 		OnStart: onStart,
 	})
 }
 
-// MB Subscriber Stop lifecycle registration
-// Message Broker Subscriber stop lifecycle registration
-// is separate from starting lifecycle registration
-func RegisterMBSubscriberOnStopLifecycle(lc LC, subConn mb.Subscriber) {
+func RegisterOnStopLifecycle(lc LC, onStop func(ctx context.Context) error) {
 	lc.Append(fx.Hook{
-		OnStop: func(ctx context.Context) error {
-			logkit.Info("Shutting down MB subscriber")
-			return subConn.Close()
-		},
+		OnStop: onStop,
 	})
 }
 

@@ -112,6 +112,9 @@ func InjectGRPCClient(constructor any, tag string) any {
 
 // === invocations ===
 
+// FIXME: ここの使い方がよくわかってない。
+// httpサーバーとgRPCサーバーは別々のinvokeで登録するのがよいのかも?
+// ここでのhttpSrvの役割が不明
 func RegisterGRPCServices() any {
 	return fx.Annotate(
 		func(

@@ -23,6 +23,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.38.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.8 // indirect
 	github.com/aws/smithy-go v1.23.0 // indirect
+	github.com/ensoria/scheduler v0.0.1 // indirect
+	github.com/ensoria/worker v0.0.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect

@@ -16,7 +16,7 @@ import (
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/websocket/pkg/wsconfig"
 
-	"github.com/ensoria/projecttemplate/internal/infra/connection/grpcclt"
+	"github.com/ensoria/projecttemplate/internal/infra/grpcclt"
 	pbPost "github.com/ensoria/projecttemplate/service/adapter/post"
 	pb "github.com/ensoria/projecttemplate/service/adapter/user"
 )

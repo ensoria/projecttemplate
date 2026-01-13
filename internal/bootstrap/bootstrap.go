@@ -5,8 +5,8 @@ import (
 	"log/slog"
 
 	"github.com/ensoria/config/pkg/registry"
-	_ "github.com/ensoria/projecttemplate/internal/infra/connection/grpcclt"
-	_ "github.com/ensoria/projecttemplate/internal/infra/connection/mb"
+	_ "github.com/ensoria/projecttemplate/internal/infra/grpcclt"
+	_ "github.com/ensoria/projecttemplate/internal/infra/mb"
 	_ "github.com/ensoria/projecttemplate/internal/module"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/projecttemplate/internal/plamo/logkit"

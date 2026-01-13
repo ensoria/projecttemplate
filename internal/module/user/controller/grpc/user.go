@@ -6,7 +6,7 @@ import (
 
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	pb "github.com/ensoria/projecttemplate/service/adapter/user"
+	pb "github.com/ensoria/projecttemplate/pb/user"
 	"google.golang.org/grpc"
 )
 

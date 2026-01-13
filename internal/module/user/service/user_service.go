@@ -6,7 +6,7 @@ import (
 	"time"
 
 	order "github.com/ensoria/projecttemplate/internal/module/order/service"
-	pbPost "github.com/ensoria/projecttemplate/service/adapter/post"
+	pbPost "github.com/ensoria/projecttemplate/pb/post"
 )
 
 // サービスを別のモジュールから使う場合は、

@@ -128,7 +128,7 @@ const file_post_post_proto_rawDesc = "" +
 	"\apost_id\x18\x01 \x01(\tR\x06postId\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\tR\acontent26\n" +
 	"\x04Post\x12.\n" +
-	"\aGetPost\x12\x0f.GetPostRequest\x1a\x10.GetPostResponse\"\x00B\x16Z\x14service_adapter/postb\x06proto3"
+	"\aGetPost\x12\x0f.GetPostRequest\x1a\x10.GetPostResponse\"\x00B\tZ\apb/postb\x06proto3"
 
 var (
 	file_post_post_proto_rawDescOnce sync.Once

@@ -7,7 +7,7 @@ import (
 	"github.com/ensoria/projecttemplate/internal/module/post/controller/http"
 	"github.com/ensoria/projecttemplate/internal/module/post/service"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	pb "github.com/ensoria/projecttemplate/service/adapter/post"
+	pb "github.com/ensoria/projecttemplate/pb/post"
 	"github.com/ensoria/rest/pkg/rest"
 )
 

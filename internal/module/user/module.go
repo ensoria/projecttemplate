@@ -17,8 +17,8 @@ import (
 	"github.com/ensoria/websocket/pkg/wsconfig"
 
 	"github.com/ensoria/projecttemplate/internal/infra/grpcclt"
-	pbPost "github.com/ensoria/projecttemplate/service/adapter/post"
-	pb "github.com/ensoria/projecttemplate/service/adapter/user"
+	pbPost "github.com/ensoria/projecttemplate/pb/post"
+	pb "github.com/ensoria/projecttemplate/pb/user"
 )
 
 // TODO: encliでモジュールを作成したら、このファイルに

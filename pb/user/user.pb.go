@@ -137,7 +137,7 @@ const file_user_user_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email26\n" +
 	"\x04User\x12.\n" +
-	"\aGetUser\x12\x0f.GetUserRequest\x1a\x10.GetUserResponse\"\x00B\x16Z\x14service_adapter/userb\x06proto3"
+	"\aGetUser\x12\x0f.GetUserRequest\x1a\x10.GetUserResponse\"\x00B\tZ\apb/userb\x06proto3"
 
 var (
 	file_user_user_proto_rawDescOnce sync.Once

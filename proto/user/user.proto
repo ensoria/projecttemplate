@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "service/adapter/user";
+option go_package = "pb/user";
 
 // ビルドコマンド
 // protoc --proto_path=proto --go_out=. --go-grpc_out=. proto/user/*

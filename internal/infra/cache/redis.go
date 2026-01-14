@@ -10,6 +10,7 @@ import (
 func NewDefaultRedisClient(envVal *string) func(lc dikit.LC) *goredis.Client {
 	return func(lc dikit.LC) *goredis.Client {
 		// TODO: envValとconfigパッケージを使って設定を取得するようにする
+		// params := registry.ModuleParams("default")
 		client := goredis.NewClient(&goredis.Options{
 			Addr: "localhost:6379",
 			DB:   0,

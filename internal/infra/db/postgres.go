@@ -10,6 +10,7 @@ import (
 func NewDefaultDatabaseClient(envVal *string) func(lc dikit.LC) (database.DatabaseClient, error) {
 	return func(lc dikit.LC) (database.DatabaseClient, error) {
 		// TODO: envValとconfigパッケージを使って設定を取得するようにする
+		// params := registry.ModuleParams("default")
 		dbConfig := &database.DatabaseConfig{
 			Type:     database.DBTypePostgreSQL,
 			Host:     "localhost",

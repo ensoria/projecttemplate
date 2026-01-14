@@ -5,6 +5,8 @@ import (
 	"log/slog"
 
 	"github.com/ensoria/config/pkg/registry"
+	"github.com/ensoria/projecttemplate/internal/infra/cache"
+	"github.com/ensoria/projecttemplate/internal/infra/db"
 	_ "github.com/ensoria/projecttemplate/internal/infra/grpcclt"
 	_ "github.com/ensoria/projecttemplate/internal/infra/mb"
 	_ "github.com/ensoria/projecttemplate/internal/module"
@@ -23,10 +25,20 @@ func Run(envVal *string) {
 	registry.InitializeConfiguration(envVal, "./internal", "config")
 
 	dikit.AppendConstructors([]any{
+		// infra
+		cache.NewDefaultRedisClient,
+		db.NewDefaultDatabaseClient,
+
+		// application
 		NewHTTPApp(envVal),
 		NewGRPCApp(envVal),
 		dikit.InjectHTTPModules(CreateHTTPPipeline),
 		dikit.InjectWSModules(CreateWSRouter),
+
+		// worker
+		NewQueueStorage,
+		NewHistoryRepository,
+		NewWorker(envVal),
 
 		// メッセージブローカーのSubscriber接続を提供
 		NewSubscriberApp(envVal),

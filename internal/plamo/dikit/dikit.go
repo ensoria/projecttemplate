@@ -17,6 +17,7 @@ type GRPCServiceRegistrar interface {
 }
 
 type LC = fx.Lifecycle
+type Hook = fx.Hook
 
 var constructors = []any{}
 

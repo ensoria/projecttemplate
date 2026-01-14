@@ -20,6 +20,9 @@ services:
       # https://docs.localstack.cloud/references/init-hooks/#lifecycle-stages-and-hooks
       - "./.localstack/init:/etc/localstack/init"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - ensoria-projecttemplate-network
+
   ensoria-projecttemplate-rabbitmq:
     image: rabbitmq:4-management
     container_name: ensoria-mb-rabbitmq
@@ -31,7 +34,57 @@ services:
       - "15672:15672"  # Management UI
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - ensoria-projecttemplate-network
+
+  ensoria-projecttemplate-redis:
+    image: redis:7.4-alpine
+    container_name: ensoria-projecttemplate-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - ensoria-projecttemplate-network
+
+
+  ensoria-projecttemplate-postgres:
+    image: postgres:16-alpine
+    container_name: ensoria-projecttemplate-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ensoria
+      POSTGRES_USER: ensoria
+      POSTGRES_PASSWORD: ensoria
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U worker"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - ensoria-projecttemplate-network
+
+
+networks:
+  ensoria-projecttemplate-network:
+    driver: bridge
 
 volumes:
   rabbitmq-data:
+    driver: local
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
 

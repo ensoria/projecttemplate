@@ -21,6 +21,10 @@ type Hook = fx.Hook
 
 var constructors = []any{}
 
+// Constructorとして登録した関数は、参照されて初めて実行されます。
+// 参照されていなくても、必ず実行してほしい関数は、AppendInvocationsを使って
+// 登録してください。
+// 登録するconstructor関数は、戻り値が必須です
 func AppendConstructors(adding []any) {
 	constructors = append(constructors, adding...)
 }
@@ -31,6 +35,10 @@ func Constructors() []any {
 
 var invocations = []any{}
 
+// Invocationは、アプリ起動時に必ず実行されるものです。
+// Constructorとは違い、参照されていなくても実行されます。
+// 参照されていなくても必ず実行してほしい関数は、ここに登録してください。
+// 登録するinvocation関数は戻り値は必須ではありません。
 func AppendInvocations(adding []any) {
 	invocations = append(invocations, adding...)
 }
@@ -139,7 +147,7 @@ func RegisterGRPCServices() any {
 
 // HTTP/WebSocket controllers lifecycle registration
 func RegisterHTTPServerLifecycle(lc LC, srv *http.Server) {
-	lc.Append(fx.Hook{
+	lc.Append(Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
 				slog.Info("HTTP server starting", "addr", srv.Addr)
@@ -162,7 +170,7 @@ func RegisterGRPCServerLifecycle(lc LC, grpcSrv *grpc.Server) {
 		return
 	}
 
-	lc.Append(fx.Hook{
+	lc.Append(Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
 				// TODO: ポートを設定可能にする
@@ -187,13 +195,13 @@ func RegisterGRPCServerLifecycle(lc LC, grpcSrv *grpc.Server) {
 }
 
 func RegisterOnStartLifecycle(lc LC, onStart func(ctx context.Context) error) {
-	lc.Append(fx.Hook{
+	lc.Append(Hook{
 		OnStart: onStart,
 	})
 }
 
 func RegisterOnStopLifecycle(lc LC, onStop func(ctx context.Context) error) {
-	lc.Append(fx.Hook{
+	lc.Append(Hook{
 		OnStop: onStop,
 	})
 }

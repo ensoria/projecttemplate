@@ -17,46 +17,39 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 )
 
-// NewQueueStorage はQueueStorageを作成する
-func NewQueueStorage(client *goredis.Client) queue.Storage {
-	return queue.NewRedisQueue(client)
-}
+func NewWorker(lc dikit.LC, cacheClient *goredis.Client, dbClient database.DatabaseClient) worker.Enqueuer {
 
-func NewHistoryRepository(client database.DatabaseClient) history.Repository {
-	return history.NewRepository(client)
-}
+	qStorage := queue.NewRedisQueue(cacheClient)
+	historyRepo := history.NewRepository(dbClient)
+	w := worker.New(
+		qStorage,
+		worker.WithHistory(historyRepo),
+	)
 
-func NewWorker(envVal *string) func(lc dikit.LC, qStorage queue.Storage, historyRepo history.Repository) worker.Enqueuer {
-	return func(lc dikit.LC, qStorage queue.Storage, historyRepo history.Repository) worker.Enqueuer {
-		w := worker.New(
-			qStorage,
-			worker.WithHistory(historyRepo),
-		)
+	RegisterDefaultJobs(w)
 
-		RegisterDefaultJobs(w)
+	// ワーカーのContext
+	var workerCtx context.Context
+	var workerCancel context.CancelFunc
 
-		// ワーカーのContext
-		var workerCtx context.Context
-		var workerCancel context.CancelFunc
+	lc.Append(dikit.Hook{
+		OnStart: func(ctx context.Context) error {
+			workerCtx, workerCancel = context.WithCancel(context.Background())
+			go func() {
+				slog.Info("Starting worker...")
+				w.Start(workerCtx)
+			}()
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			slog.Info("Stopping worker...")
+			workerCancel()
+			return w.Shutdown(ctx)
+		},
+	})
 
-		lc.Append(dikit.Hook{
-			OnStart: func(ctx context.Context) error {
-				workerCtx, workerCancel = context.WithCancel(context.Background())
-				go func() {
-					slog.Info("Starting worker...")
-					w.Start(workerCtx)
-				}()
-				return nil
-			},
-			OnStop: func(ctx context.Context) error {
-				slog.Info("Stopping worker...")
-				workerCancel()
-				return w.Shutdown(ctx)
-			},
-		})
+	return w
 
-		return w
-	}
 }
 
 // ここでジョブを登録していく

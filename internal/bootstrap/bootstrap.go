@@ -26,8 +26,8 @@ func Run(envVal *string) {
 
 	dikit.AppendConstructors([]any{
 		// infra
-		cache.NewDefaultRedisClient,
-		db.NewDefaultDatabaseClient,
+		cache.NewDefaultRedisClient(envVal),
+		db.NewDefaultDatabaseClient(envVal),
 
 		// application
 		NewHTTPApp(envVal),
@@ -35,19 +35,16 @@ func Run(envVal *string) {
 		dikit.InjectHTTPModules(CreateHTTPPipeline),
 		dikit.InjectWSModules(CreateWSRouter),
 
-		// worker
-		NewQueueStorage,
-		NewHistoryRepository,
-		NewWorker(envVal),
-
 		// メッセージブローカーのSubscriber接続を提供
 		NewSubscriberApp(envVal),
 		NewSubscribe,
 	})
 
-	// TODO: constructorとinvocationの使い分けがいまいち分からないので調べる
 	dikit.AppendInvocations([]any{
 		dikit.RegisterGRPCServices(),
+
+		// worker
+		NewWorker,
 	})
 
 	// TODO: putputFxLogは、環境変数で変えれるようにする

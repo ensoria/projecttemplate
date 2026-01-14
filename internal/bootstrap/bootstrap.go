@@ -15,7 +15,6 @@ type GlobalError struct {
 	Message string `json:"message"`
 }
 
-// これを、cmd/main.goで実行する
 func Run(envVal *string) {
 	registry.InitializeConfiguration(envVal, "./internal", "config")
 
@@ -30,6 +29,9 @@ func Run(envVal *string) {
 		dikit.InjectHTTPModules(CreateHTTPPipeline),
 		dikit.InjectWSModules(CreateWSRouter),
 
+		// worker
+		NewWorker,
+
 		// メッセージブローカーのSubscriber接続を提供
 		NewSubscriberApp(envVal),
 		NewSubscribe,
@@ -37,9 +39,6 @@ func Run(envVal *string) {
 
 	dikit.AppendInvocations([]any{
 		dikit.RegisterGRPCServices(),
-
-		// worker
-		NewWorker,
 	})
 
 	// TODO: putputFxLogは、環境変数で変えれるようにする

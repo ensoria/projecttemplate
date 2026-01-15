@@ -43,7 +43,8 @@ func (s *UserServiceImpl) Something() string {
 	fmt.Printf("injected orderService: %T\n", s.orderService)
 	s.orderService.GetOrder()
 
-	// worker test contextは本来requestから渡すこと
+	// worker test contextは基本的には`context.Background()`を使う
+	// request.Context()などを使わないように注意すること
 	a, err := s.jobQueue.Enqueue(context.Background(), "simple_log", map[string]any{
 		"message": "UserServiceImpl.Something called",
 	})

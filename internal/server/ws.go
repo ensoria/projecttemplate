@@ -1,4 +1,4 @@
-package bootstrap
+package server
 
 import (
 	"github.com/ensoria/websocket/pkg/wsconfig"

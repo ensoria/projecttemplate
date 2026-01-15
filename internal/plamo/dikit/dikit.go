@@ -127,6 +127,8 @@ func InjectGRPCClient(constructor any, tag string) any {
 func RegisterGRPCServices() any {
 	return fx.Annotate(
 		func(
+			// NOTICE: ここの引数がないと、NewHTTPAppで生成されたhttp.Serverがinjectされる場所がないため、httpサーバーが起動しない
+			// FIXME: あまり理解しやすいコードでないため、別の方法を検討する
 			httpSrv *http.Server,
 			grpcSrv *grpc.Server,
 			grpcServices []GRPCServiceRegistrar,

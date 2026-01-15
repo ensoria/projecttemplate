@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"github.com/ensoria/projecttemplate/internal/bootstrap"
 	"github.com/ensoria/projecttemplate/internal/scheduler"
+	"github.com/ensoria/projecttemplate/internal/server"
 )
 
 // main entry point
@@ -26,6 +26,6 @@ func main() {
 	if isScheduler != nil && *isScheduler {
 		scheduler.Start(envVal)
 	} else {
-		bootstrap.Run(envVal)
+		server.Run(envVal)
 	}
 }

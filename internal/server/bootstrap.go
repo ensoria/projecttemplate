@@ -20,8 +20,8 @@ func Run(envVal *string) {
 
 	dikit.AppendConstructors([]any{
 		// infra
-		cache.NewDefaultRedisClient(envVal),
-		db.NewDefaultDatabaseClient(envVal),
+		cache.NewDefaultWorkerCacheClient(envVal),
+		db.NewDefaultWorkerDBClient(envVal),
 
 		// application
 		NewHTTPApp(envVal),

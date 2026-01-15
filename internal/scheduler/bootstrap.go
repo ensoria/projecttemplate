@@ -1,17 +1,69 @@
 package scheduler
 
-// 定期実行するイベントをここで登録する。
-// 基本的に `/cmd`内のコマンドを、ここでいつ実行するかを
-// 指定する。バッチ処理ができるようにする。
+import (
+	"github.com/ensoria/config/pkg/registry"
+	"github.com/ensoria/projecttemplate/internal/infra/cache"
+	"github.com/ensoria/projecttemplate/internal/infra/db"
+	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
+	"github.com/ensoria/scheduler/pkg/control"
+	"github.com/ensoria/scheduler/pkg/database"
+	"github.com/ensoria/scheduler/pkg/distributed"
+	"github.com/ensoria/scheduler/pkg/recovery"
+	"github.com/ensoria/scheduler/pkg/scheduler"
+	goredis "github.com/redis/go-redis/v9"
+)
 
-// NOTICE: ただし、このスケジューラーのECSをずっと起動しておかなければいけないので、コストかかるかも。
-// このスケジューラーのスペックを最初に決めて、しまったら水平スケールできないはず。
-// 水平スケールすると、ジョブが重複して走ってしまうため。
-// コストを抑えて、スケジューラーを実行させる方法はないか?
+func Start(envVal *string) {
+	registry.InitializeConfiguration(envVal, "./internal", "config")
 
-func Start(env *string) {
-	// -schedulerフラグがあれば、app.Run()の代わりに実行
-	// 1分ごとにcronでスケジュールされた処理があれば、それを実行する。
-	// 基本的には、ECSで、appとは別のサービスとして動かすもの。
-	// schedulerでは、httpサーバーなどは起動させない。
+	dikit.AppendConstructors([]any{
+		// infra
+		cache.NewDefaultSchedulerCacheClient(envVal),
+		db.NewDefaultSchedulerDBClient(envVal),
+
+		// scheduler
+		NewScheduler,
+		// TODO: httpサーバーは必要だが、scheduler管理用のエンドポイントのみにする
+
+	})
+
+	dikit.AppendInvocations([]any{
+		RegisterSchedulerLifeCycle,
+	})
+
+	// TODO: putputFxLogは、環境変数で変えれるようにする
+	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), true)
+}
+
+func NewScheduler(
+	redisClient *goredis.Client,
+	dbClient database.DatabaseClient,
+) (*scheduler.Scheduler, error) {
+	backend, err := distributed.NewBackend(&distributed.Config{
+		BackendType: distributed.BackendTypeRedis,
+		Client:      redisClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	recoveryRepo := recovery.NewRedisStateRepository(redisClient)
+	controlRepo := control.NewRedisStateRepository(redisClient, "")
+
+	s := scheduler.New(backend,
+		scheduler.WithLogger(logkit.Logger()),
+		scheduler.WithRecovery(recoveryRepo),
+		scheduler.WithControl(controlRepo),
+		scheduler.WithHistory(dbClient),
+	)
+
+	return s, nil
+
+}
+
+func RegisterSchedulerLifeCycle(lc dikit.LC, s *scheduler.Scheduler) error {
+	// TODO: httpサーバーの起動も必要そう
+
+	return nil
 }

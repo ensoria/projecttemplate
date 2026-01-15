@@ -54,6 +54,8 @@ func NewWebSocketModule(onOpen *ws.OnOpen, onMessage *ws.OnMessage) *wsconfig.Mo
 	return module
 }
 
+// メッセージブローカーSubscriberは戻り値がないため、injectされることもない。そのため、constructorでは起動させることができない。
+// 登録はconstructorsではなく、invocationsに登録する必要がある
 func NewSubscribeModule(lc dikit.LC, subscribe mb.StartSubscription, handler mb.SubscribeHandler) {
 	onStart := func(ctx context.Context) error {
 		slog.Info("start subscribing to hello_world")

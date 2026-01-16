@@ -112,39 +112,18 @@ func InjectSubscriber(constructor any, tag string) any {
 	)
 }
 
+func InjectGRPCServices(f any) any {
+	return fx.Annotate(
+		f,
+		fx.ParamTags(`group:"grpc_services"`),
+	)
+}
+
 // gRPCクライアントの注入用
 // 実際には引数が1つだけの場合は汎用的に使えますが、
 // 汎用的に使いたい場合は、別の関数を用意するか、IbjectWithTagsを使ってください。
 func InjectGRPCClient(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
-}
-
-// === invocations ===
-
-// FIXME: ここの使い方がよくわかってない。
-// httpサーバーとgRPCサーバーは別々のinvokeで登録するのがよいのかも?
-// ここでのhttpSrvの役割が不明
-func RegisterGRPCServices() any {
-	return fx.Annotate(
-		func(
-			// NOTICE: ここの引数がないと、NewHTTPAppで生成されたhttp.Serverがinjectされる場所がないため、httpサーバーが起動しない
-			// FIXME: あまり理解しやすいコードでないため、別の方法を検討する
-			httpSrv *http.Server,
-			grpcSrv *grpc.Server,
-			grpcServices []GRPCServiceRegistrar,
-		) {
-			// gRPCサービスの一括登録
-			if grpcSrv != nil {
-				for _, service := range grpcServices {
-					service.RegisterWithServer(grpcSrv)
-				}
-				slog.Info("gRPC services registered", "count", len(grpcServices))
-			}
-		},
-		// 第1引数(httpSrv)と第2引数(grpcSrv)にタグは不要なので
-		// ``にしてある?
-		fx.ParamTags(``, ``, `group:"grpc_services"`),
-	)
 }
 
 // HTTP/WebSocket controllers lifecycle registration
@@ -207,8 +186,6 @@ func RegisterOnStopLifecycle(lc LC, onStop func(ctx context.Context) error) {
 		OnStop: onStop,
 	})
 }
-
-// 汎用的なfxアプリケーションの提供と実行
 
 func ProvideAndRun(constructors []any, invocations []any, outputFxLog bool) {
 	options := []fx.Option{

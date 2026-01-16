@@ -10,8 +10,8 @@ import (
 )
 
 // gRPCサーバーの初期化
-func NewGRPCApp(envVal *string) func(lc dikit.LC) *grpc.Server {
-	return func(lc dikit.LC) *grpc.Server {
+func NewGRPCApp(envVal *string) func(lc dikit.LC, grpcServices []dikit.GRPCServiceRegistrar) *grpc.Server {
+	return func(lc dikit.LC, grpcServices []dikit.GRPCServiceRegistrar) *grpc.Server {
 		// ログとpanicリカバリinterceptor付きのgRPCサーバーを作成
 		grpcSrv := grpckit.NewGRPCServer(logkit.Logger())
 
@@ -23,6 +23,16 @@ func NewGRPCApp(envVal *string) func(lc dikit.LC) *grpc.Server {
 		}
 
 		dikit.RegisterGRPCServerLifecycle(lc, grpcSrv)
+
+		for _, svc := range grpcServices {
+			svc.RegisterWithServer(grpcSrv)
+		}
+		logkit.Info("gRPC services registered", "count", len(grpcServices))
+
 		return grpcSrv
 	}
+}
+
+func CreateGRPCServices(modules []dikit.GRPCServiceRegistrar) []dikit.GRPCServiceRegistrar {
+	return modules
 }

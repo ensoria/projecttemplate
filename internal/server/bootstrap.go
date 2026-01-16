@@ -24,21 +24,20 @@ func Run(envVal *string) {
 		db.NewDefaultWorkerDBClient(envVal),
 
 		// application
-		NewHTTPApp(envVal),
-		NewGRPCApp(envVal),
 		dikit.InjectHTTPModules(CreateHTTPPipeline),
 		dikit.InjectWSModules(CreateWSRouter),
-
-		// worker
-		NewWorker,
-
+		dikit.InjectGRPCServices(CreateGRPCServices),
 		// メッセージブローカーのSubscriber接続を提供
 		NewSubscriberApp(envVal),
 		NewSubscribe,
+
+		// worker
+		NewWorker,
 	})
 
 	dikit.AppendInvocations([]any{
-		dikit.RegisterGRPCServices(),
+		NewHTTPApp(envVal),
+		NewGRPCApp(envVal),
 	})
 
 	// TODO: putputFxLogは、環境変数で変えれるようにする

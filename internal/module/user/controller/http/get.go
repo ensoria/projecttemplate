@@ -33,6 +33,13 @@ func (c *Get) Handle(r *rest.Request) *rest.Response {
 
 	c.Publish("hello_world", []byte("Hello, World!"), map[string]string{"source": "Get.Handle"})
 
+	// calling another modules gRPC service
+	res, err := c.Service.GetPostContent("1")
+	if err != nil {
+		fmt.Println("gRPC call failed:", err)
+	}
+	fmt.Println("gRPC response received!", res)
+
 	return &rest.Response{
 		Xml:        true,
 		Code:       http.StatusOK,

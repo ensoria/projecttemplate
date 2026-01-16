@@ -5,6 +5,7 @@ import (
 	"github.com/ensoria/projecttemplate/internal/infra/cache"
 	"github.com/ensoria/projecttemplate/internal/infra/db"
 	_ "github.com/ensoria/projecttemplate/internal/infra/grpcclt"
+	"github.com/ensoria/projecttemplate/internal/infra/mb"
 	_ "github.com/ensoria/projecttemplate/internal/infra/mb"
 	_ "github.com/ensoria/projecttemplate/internal/module"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
@@ -22,24 +23,26 @@ func Run(envVal *string) {
 		// infra
 		cache.NewDefaultWorkerCacheClient(envVal),
 		db.NewDefaultWorkerDBClient(envVal),
+		mb.NewSubscriberConnection(envVal),
+		mb.NewPublisherConnection(envVal),
 
-		// application
+		// controllers
 		dikit.InjectHTTPModules(CreateHTTPPipeline),
 		dikit.InjectWSModules(CreateWSRouter),
 		dikit.InjectGRPCServices(CreateGRPCServices),
-		// メッセージブローカーのSubscriber接続を提供
-		NewSubscriberApp(envVal),
 		NewSubscribe,
+		NewPublish,
 
 		// worker
 		NewWorker,
 	})
 
 	dikit.AppendInvocations([]any{
+		// application invocations
 		NewHTTPApp(envVal),
 		NewGRPCApp(envVal),
 	})
 
-	// TODO: putputFxLogは、環境変数で変えれるようにする
+	// TODO: 最後の引数の、putputFxLogは、環境変数で変えれるようにする
 	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), true)
 }

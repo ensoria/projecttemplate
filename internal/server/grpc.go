@@ -33,6 +33,7 @@ func NewGRPCApp(envVal *string) func(lc dikit.LC, grpcServices []dikit.GRPCServi
 	}
 }
 
+// ASK: この関数が必要か不明
 func CreateGRPCServices(modules []dikit.GRPCServiceRegistrar) []dikit.GRPCServiceRegistrar {
 	return modules
 }

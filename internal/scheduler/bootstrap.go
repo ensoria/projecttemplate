@@ -22,6 +22,8 @@ func Start(envVal *string) {
 		cache.NewDefaultSchedulerCacheClient(envVal),
 		db.NewDefaultSchedulerDBClient(envVal),
 
+		// TODO: scheduler tasksを、moduleと同じように、group:"scheduler_tasks"でまとめて登録できるようにする
+
 		// scheduler
 		NewScheduler,
 		// TODO: httpサーバーは必要だが、scheduler管理用のエンドポイントのみにする
@@ -64,6 +66,8 @@ func NewScheduler(
 
 func RegisterSchedulerLifeCycle(lc dikit.LC, s *scheduler.Scheduler) error {
 	// TODO: httpサーバーの起動も必要そう
+
+	RegisterTasks(s)
 
 	return nil
 }

@@ -8,23 +8,33 @@ import (
 	workerDB "github.com/ensoria/worker/pkg/database"
 )
 
-func NewDefaultWorkerDBClient(envVal *string) func(lc dikit.LC) (workerDB.DatabaseClient, error) {
-	return func(lc dikit.LC) (workerDB.DatabaseClient, error) {
-		// TODO: envValとconfigパッケージを使って設定を取得するようにする
-		// params := registry.ModuleParams("default")
-		dbConfig := &workerDB.DatabaseConfig{
-			Type:     workerDB.DBTypePostgreSQL,
-			Host:     "localhost",
-			Port:     5432,
-			User:     "ensoria",
-			Password: "ensoria",
-			Database: "ensoria",
-			TLSMode:  "disable",
-		}
+// DatabaseClient is a common interface for database clients.
+type DatabaseClient interface {
+	Close() error
+}
 
-		client, err := workerDB.NewDatabaseClient(dbConfig)
+// DatabaseConfig is a common interface for database configurations.
+type DatabaseConfig interface {
+	workerDB.DatabaseConfig | schedulerDB.DatabaseConfig
+}
+
+// ClientConstructor is a function type that creates a DatabaseClient from a config.
+type ClientConstructor[C DatabaseConfig, T DatabaseClient] func(*C) (T, error)
+
+// NewDefaultDBClient creates a generic database client factory.
+func NewDefaultDBClient[C DatabaseConfig, T DatabaseClient](
+	envVal *string,
+	dbType string,
+	newClient ClientConstructor[C, T],
+	configFactory func(dbType string) *C,
+) func(lc dikit.LC) (T, error) {
+	return func(lc dikit.LC) (T, error) {
+		cfg := configFactory(dbType)
+
+		client, err := newClient(cfg)
 		if err != nil {
-			return nil, err
+			var zero T
+			return zero, err
 		}
 
 		lc.Append(dikit.Hook{
@@ -40,35 +50,44 @@ func NewDefaultWorkerDBClient(envVal *string) func(lc dikit.LC) (workerDB.Databa
 	}
 }
 
+// NewDefaultWorkerDBClient creates a worker database client.
+func NewDefaultWorkerDBClient(envVal *string) func(lc dikit.LC) (workerDB.DatabaseClient, error) {
+	return NewDefaultDBClient(
+		envVal,
+		string(workerDB.DBTypePostgreSQL), // TODO: envValとconfigパッケージを使って設定を取得するようにする
+		workerDB.NewDatabaseClient,
+		func(dbType string) *workerDB.DatabaseConfig {
+			// TODO: envValとconfigパッケージを使って設定を取得するようにする
+			return &workerDB.DatabaseConfig{
+				Type:     workerDB.DBType(dbType),
+				Host:     "localhost",
+				Port:     5432,
+				User:     "ensoria",
+				Password: "ensoria",
+				Database: "ensoria",
+				TLSMode:  "disable",
+			}
+		},
+	)
+}
+
+// NewDefaultSchedulerDBClient creates a scheduler database client.
 func NewDefaultSchedulerDBClient(envVal *string) func(lc dikit.LC) (schedulerDB.DatabaseClient, error) {
-	return func(lc dikit.LC) (schedulerDB.DatabaseClient, error) {
-		// TODO: envValとconfigパッケージを使って設定を取得するようにする
-		// params := registry.ModuleParams("default")
-		cfg := &schedulerDB.DatabaseConfig{
-			Type:     schedulerDB.DBTypePostgreSQL,
-			Host:     "localhost",
-			Port:     5432,
-			User:     "ensoria",
-			Password: "ensoria",
-			Database: "ensoria",
-			TLSMode:  "disable",
-		}
-
-		client, err := schedulerDB.NewDatabaseClient(cfg)
-		if err != nil {
-			return nil, err
-		}
-
-		lc.Append(dikit.Hook{
-			OnStart: func(ctx context.Context) error {
-				return nil
-			},
-			OnStop: func(ctx context.Context) error {
-				return client.Close()
-			},
-		})
-
-		return client, nil
-	}
-
+	return NewDefaultDBClient(
+		envVal,
+		string(schedulerDB.DBTypePostgreSQL), // TODO: envValとconfigパッケージを使って設定を取得するようにする
+		schedulerDB.NewDatabaseClient,
+		func(dbType string) *schedulerDB.DatabaseConfig {
+			// TODO: envValとconfigパッケージを使って設定を取得するようにする
+			return &schedulerDB.DatabaseConfig{
+				Type:     schedulerDB.DBType(dbType),
+				Host:     "localhost",
+				Port:     5432,
+				User:     "ensoria",
+				Password: "ensoria",
+				Database: "ensoria",
+				TLSMode:  "disable",
+			}
+		},
+	)
 }

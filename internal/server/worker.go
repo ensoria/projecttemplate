@@ -52,7 +52,8 @@ func NewWorker(lc dikit.LC, cacheClient *goredis.Client, dbClient database.Datab
 
 }
 
-// ここでジョブを登録していく
+// FIXME: まとめてジョブ []job.JobHandlerを受け取って登録できるようにする。
+// 各job.JobHandlerは、モジュールごとに定義するようにする。
 func RegisterDefaultJobs(w *worker.Worker) {
 	// SimpleLogJob - シンプルなログ出力
 	w.Register("simple_log", SimpleLogHandler, &job.Option{

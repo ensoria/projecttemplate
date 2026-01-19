@@ -87,6 +87,14 @@ func AsGRPCService(f any) any {
 	)
 }
 
+// TODO:
+func AsScheduledTask(f any) any {
+	return fx.Annotate(
+		f,
+		fx.ResultTags(`group:"scheduled_tasks`),
+	)
+}
+
 // === Injectors ===
 
 // 汎用版 - 複数の引数位置に対してタグを指定可能
@@ -124,6 +132,14 @@ func InjectGRPCServices(f any) any {
 // 汎用的に使いたい場合は、別の関数を用意するか、IbjectWithTagsを使ってください。
 func InjectGRPCClient(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
+}
+
+// TODO:
+func InjectScheduledTasks(f any) any {
+	return fx.Annotate(
+		f,
+		fx.ParamTags(`group:"scheduled_tasks"`),
+	)
 }
 
 // HTTP/WebSocket controllers lifecycle registration

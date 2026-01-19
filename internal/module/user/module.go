@@ -12,6 +12,7 @@ import (
 	usermb "github.com/ensoria/projecttemplate/internal/module/user/controller/mb"
 	"github.com/ensoria/projecttemplate/internal/module/user/controller/ws"
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
+	"github.com/ensoria/projecttemplate/internal/module/user/task"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/websocket/pkg/wsconfig"
@@ -92,6 +93,10 @@ func init() {
 		// gRPCクライアントのコンストラクタは、`dikit.InjectNamed`を使って、どの
 		// gRPCコネクションを使うかを指定すること
 		dikit.InjectGRPCClient(pbPost.NewPostClient, grpcclt.PostConnName),
+
+		// scheduler tasks
+		task.NewSimpleTask,
+		dikit.AsScheduledTask(task.NewUserTask),
 	})
 
 	// IMPORTANT! メッセージブローカーの場合は、constructorsではなく、invocationsに登録する

@@ -67,6 +67,7 @@ func NewScheduler(
 func RegisterSchedulerLifeCycle(lc dikit.LC, s *scheduler.Scheduler) error {
 	// TODO: httpサーバーの起動も必要そう
 
+	// TODO: 登録方法を変える: AsScheduledTask()を使って、fxに登録して、インジェクトして使うようにする。
 	RegisterTasks(s)
 
 	return nil

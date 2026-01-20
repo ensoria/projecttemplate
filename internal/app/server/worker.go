@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
+	modJob "github.com/ensoria/projecttemplate/internal/app/server/job"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	modJob "github.com/ensoria/projecttemplate/internal/server/job"
 	"github.com/ensoria/worker/pkg/database"
 	"github.com/ensoria/worker/pkg/history"
 	"github.com/ensoria/worker/pkg/queue"

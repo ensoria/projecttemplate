@@ -2,10 +2,10 @@ package scheduler
 
 import (
 	"github.com/ensoria/config/pkg/registry"
+	"github.com/ensoria/projecttemplate/internal/app/server"
 	"github.com/ensoria/projecttemplate/internal/infra/cache"
 	"github.com/ensoria/projecttemplate/internal/infra/db"
 	"github.com/ensoria/projecttemplate/internal/infra/mb"
-	"github.com/ensoria/projecttemplate/internal/server"
 
 	_ "github.com/ensoria/projecttemplate/internal/module" // TODO:
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
@@ -27,7 +27,7 @@ func Start(envVal *string) {
 		mb.NewPublisherConnection(envVal),
 		server.NewSubscribe,
 		server.NewPublish,
-		dikit.InjectWithTags(server.NewWorker, ``, `name:"workerCache"`, ``),
+		dikit.InjectWithTags(server.NewWorker, ``, `name:"workerCache"`, ``, `group:"worker_jobs"`),
 
 		// scheduler
 		// タグ名の付いたキャッシュクライアントを注入

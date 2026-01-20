@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"github.com/ensoria/projecttemplate/internal/scheduler"
-	"github.com/ensoria/projecttemplate/internal/server"
+	"github.com/ensoria/projecttemplate/internal/app/scheduler"
+	"github.com/ensoria/projecttemplate/internal/app/server"
 )
 
 // main entry point

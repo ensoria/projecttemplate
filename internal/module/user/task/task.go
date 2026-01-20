@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	schedTask "github.com/ensoria/projecttemplate/internal/scheduler/task"
+	schedTask "github.com/ensoria/projecttemplate/internal/app/scheduler/task"
 
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
 	"github.com/ensoria/scheduler/pkg/cron"

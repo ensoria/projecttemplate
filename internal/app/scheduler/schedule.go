@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ensoria/projecttemplate/internal/app/scheduler/task"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
-	"github.com/ensoria/projecttemplate/internal/scheduler/task"
 	"github.com/ensoria/scheduler/pkg/control"
 	"github.com/ensoria/scheduler/pkg/database"
 	"github.com/ensoria/scheduler/pkg/distributed"

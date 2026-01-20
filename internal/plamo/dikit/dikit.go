@@ -87,6 +87,13 @@ func AsGRPCService(f any) any {
 	)
 }
 
+func AsWorkerJob(f any) any {
+	return fx.Annotate(
+		f,
+		fx.ResultTags(`group:"worker_jobs"`),
+	)
+}
+
 func AsScheduledTask(f any) any {
 	return fx.Annotate(
 		f,
@@ -132,6 +139,13 @@ func InjectGRPCServices(f any) any {
 // 汎用的に使いたい場合は、別の関数を用意するか、IbjectWithTagsを使ってください。
 func InjectGRPCClient(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
+}
+
+func InjectWorkerJobs(f any) any {
+	return fx.Annotate(
+		f,
+		fx.ParamTags(``, ``, ``, `group:"worker_jobs"`),
+	)
 }
 
 func InjectScheduledTasks(f any) any {

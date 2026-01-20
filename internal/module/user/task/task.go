@@ -10,7 +10,6 @@ import (
 	"github.com/ensoria/scheduler/pkg/cron"
 )
 
-// WORKING: まだ実験中
 func NewUserTask(task *SimpleTask) (*schedTask.ScheduledTask, error) {
 	everyMinutes, err := cron.New("*", "*", "*", "*", "*")
 	if err != nil {

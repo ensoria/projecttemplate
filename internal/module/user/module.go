@@ -11,6 +11,7 @@ import (
 	"github.com/ensoria/projecttemplate/internal/module/user/controller/http"
 	usermb "github.com/ensoria/projecttemplate/internal/module/user/controller/mb"
 	"github.com/ensoria/projecttemplate/internal/module/user/controller/ws"
+	"github.com/ensoria/projecttemplate/internal/module/user/job"
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
 	"github.com/ensoria/projecttemplate/internal/module/user/task"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
@@ -93,6 +94,10 @@ func init() {
 		// gRPCクライアントのコンストラクタは、`dikit.InjectNamed`を使って、どの
 		// gRPCコネクションを使うかを指定すること
 		dikit.InjectGRPCClient(pbPost.NewPostClient, grpcclt.PostConnName),
+
+		// worker jobs
+		job.NewSimpleJob,
+		dikit.AsWorkerJob(job.NewUserJob),
 
 		// scheduler tasks
 		task.NewSimpleTask,

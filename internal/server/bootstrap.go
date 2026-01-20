@@ -34,7 +34,7 @@ func Run(envVal *string) {
 		NewPublish,
 
 		// worker
-		NewWorker,
+		dikit.InjectWorkerJobs(NewWorker),
 	})
 
 	dikit.AppendInvocations([]any{

@@ -2,22 +2,23 @@ package server
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
 	"log/slog"
-	"time"
 
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	modJob "github.com/ensoria/projecttemplate/internal/server/job"
 	"github.com/ensoria/worker/pkg/database"
 	"github.com/ensoria/worker/pkg/history"
-	"github.com/ensoria/worker/pkg/job"
 	"github.com/ensoria/worker/pkg/queue"
 	"github.com/ensoria/worker/pkg/worker"
 	goredis "github.com/redis/go-redis/v9"
 )
 
-func NewWorker(lc dikit.LC, cacheClient *goredis.Client, dbClient database.DatabaseClient) worker.Enqueuer {
+func NewWorker(
+	lc dikit.LC,
+	cacheClient *goredis.Client,
+	dbClient database.DatabaseClient,
+	jobs []*modJob.JobHandler,
+) worker.Enqueuer {
 
 	qStorage := queue.NewRedisQueue(cacheClient)
 	historyRepo := history.NewRepository(dbClient)
@@ -26,7 +27,7 @@ func NewWorker(lc dikit.LC, cacheClient *goredis.Client, dbClient database.Datab
 		worker.WithHistory(historyRepo),
 	)
 
-	RegisterDefaultJobs(w)
+	RegisterDefaultJobs(w, jobs)
 
 	// ワーカーのContext
 	var workerCtx context.Context
@@ -52,35 +53,11 @@ func NewWorker(lc dikit.LC, cacheClient *goredis.Client, dbClient database.Datab
 
 }
 
-// FIXME: まとめてジョブ []job.JobHandlerを受け取って登録できるようにする。
-// 各job.JobHandlerは、モジュールごとに定義するようにする。
-func RegisterDefaultJobs(w *worker.Worker) {
-	// SimpleLogJob - シンプルなログ出力
-	w.Register("simple_log", SimpleLogHandler, &job.Option{
-		MaxRetries: 3,
-		RetryDelay: 1 * time.Second,
-		Timeout:    30 * time.Second,
-	})
-
-}
-
-// SimpleLogJob - シンプルなログ出力ジョブ
-// ペイロードを受け取り、ログに出力するだけのシンプルなジョブ
-type SimpleLogPayload struct {
-	Message string `json:"message"`
-}
-
-func SimpleLogHandler(ctx context.Context, payload []byte) error {
-	var p SimpleLogPayload
-	if err := json.Unmarshal(payload, &p); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+// // FIXME: まとめてジョブ []job.JobHandlerを受け取って登録できるようにする。
+// // 各job.JobHandlerは、モジュールごとに定義するようにする。
+func RegisterDefaultJobs(w *worker.Worker, jobs []*modJob.JobHandler) {
+	for _, j := range jobs {
+		w.Register(j.Name, j.Handler, j.Options)
 	}
 
-	log.Printf("[SimpleLogJob] Processing message: %s", p.Message)
-
-	// シミュレート処理時間
-	time.Sleep(500 * time.Millisecond)
-
-	log.Printf("[SimpleLogJob] Completed: %s", p.Message)
-	return nil
 }

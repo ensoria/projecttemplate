@@ -87,7 +87,6 @@ func AsGRPCService(f any) any {
 	)
 }
 
-// TODO:
 func AsScheduledTask(f any) any {
 	return fx.Annotate(
 		f,

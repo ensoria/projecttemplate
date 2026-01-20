@@ -47,12 +47,15 @@ func NewSchedulerApp(lc dikit.LC, s *scheduler.Scheduler, tasks []*task.Schedule
 
 	RegisterTasks(s, tasks)
 
-	// REFACTOR: dikit.RegisterSchedulerLifeCycle()関数に移動
+	// REFACTOR: RegisterSchedulerLifeCycle()関数に移動
 	lc.Append(dikit.Hook{
 		OnStart: func(ctx context.Context) error {
 			// TODO: httpサーバーも一緒にlifecycleで管理する?それとも分けるか?
 			fmt.Println("Starting scheduler...")
-			if err := s.Start(ctx); err != nil {
+			// OnStartのctxは起動フェーズ用なので、OnStart が完了すると（あるいはタイムアウトすると）キャンセルされる
+			// スケジューラーのような長時間実行するサービスには、独立した context.Background() を渡す必要がある
+			// これにより、OnStartが完了してもスケジューラーは動き続ける
+			if err := s.Start(context.Background()); err != nil {
 				return fmt.Errorf("failed to start scheduler: %w", err)
 			}
 			return nil
@@ -60,6 +63,7 @@ func NewSchedulerApp(lc dikit.LC, s *scheduler.Scheduler, tasks []*task.Schedule
 		OnStop: func(ctx context.Context) error {
 			// TODO: httpサーバーも一緒にlifecycleで管理する?それとも分けるか?
 
+			// シャットダウンcontextは、ctxを使う
 			if err := s.Shutdown(ctx); err != nil {
 				return fmt.Errorf("scheduler shutdown error: %v", err)
 			}

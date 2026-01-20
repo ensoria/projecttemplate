@@ -1,9 +1,9 @@
 package job
 
-import workerJob "github.com/ensoria/worker/pkg/job"
+import libWorker "github.com/ensoria/worker/pkg/job" // TODO: 名前を考え直す
 
 type JobHandler struct {
 	Name    string
-	Handler workerJob.JobHandler
-	Options *workerJob.Option
+	Handler libWorker.JobHandler
+	Options *libWorker.Option
 }

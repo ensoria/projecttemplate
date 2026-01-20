@@ -7,16 +7,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/ensoria/projecttemplate/internal/module/user/service"
 	modJob "github.com/ensoria/projecttemplate/internal/server/job" // TODO: 名前を考え直す
-	workerJob "github.com/ensoria/worker/pkg/job"
+	libWorker "github.com/ensoria/worker/pkg/job"
 )
 
 func NewUserJob(j *SimpleJob) *modJob.JobHandler {
 	return &modJob.JobHandler{
 		Name:    "simple_log",
 		Handler: j.SimpleLogHandler,
-		Options: &workerJob.Option{
+		Options: &libWorker.Option{
 			MaxRetries: 3,
 			RetryDelay: 1 * time.Second,
 			Timeout:    30 * time.Second,
@@ -25,13 +24,11 @@ func NewUserJob(j *SimpleJob) *modJob.JobHandler {
 }
 
 type SimpleJob struct {
-	Service service.UserService
 }
 
-func NewSimpleJob(service service.UserService) *SimpleJob {
-	return &SimpleJob{
-		Service: service,
-	}
+// Inject any dependencies if needed
+func NewSimpleJob() *SimpleJob {
+	return &SimpleJob{}
 }
 
 type SimpleLogPayload struct {

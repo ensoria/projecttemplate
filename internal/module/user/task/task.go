@@ -4,18 +4,19 @@ import (
 	"context"
 	"log"
 
+	schedTask "github.com/ensoria/projecttemplate/internal/scheduler/task"
+
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
-	"github.com/ensoria/projecttemplate/internal/scheduler"
 	"github.com/ensoria/scheduler/pkg/cron"
 )
 
 // WORKING: まだ実験中
-func NewUserTask(task *SimpleTask) (*scheduler.ScheduledTask, error) {
+func NewUserTask(task *SimpleTask) (*schedTask.ScheduledTask, error) {
 	everyMinutes, err := cron.New("*", "*", "*", "*", "*")
 	if err != nil {
 		return nil, err
 	}
-	return &scheduler.ScheduledTask{
+	return &schedTask.ScheduledTask{
 		Name: "SimpleUserTask",
 		Cron: everyMinutes,
 		Task: task.Run,

@@ -4,14 +4,11 @@ import (
 	"github.com/ensoria/config/pkg/registry"
 	"github.com/ensoria/projecttemplate/internal/infra/cache"
 	"github.com/ensoria/projecttemplate/internal/infra/db"
+	"github.com/ensoria/projecttemplate/internal/infra/mb"
+	"github.com/ensoria/projecttemplate/internal/server"
+
+	_ "github.com/ensoria/projecttemplate/internal/module" // TODO:
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
-	"github.com/ensoria/scheduler/pkg/control"
-	"github.com/ensoria/scheduler/pkg/database"
-	"github.com/ensoria/scheduler/pkg/distributed"
-	"github.com/ensoria/scheduler/pkg/recovery"
-	"github.com/ensoria/scheduler/pkg/scheduler"
-	goredis "github.com/redis/go-redis/v9"
 )
 
 func Start(envVal *string) {
@@ -19,56 +16,30 @@ func Start(envVal *string) {
 
 	dikit.AppendConstructors([]any{
 		// infra
-		cache.NewDefaultSchedulerCacheClient(envVal),
+		// workerとinjectするインスタンスを分けるため、タグ名を付ける
+		dikit.ProvideNamed(cache.NewDefaultSchedulerCacheClient(envVal), "schedulerCache"),
 		db.NewDefaultSchedulerDBClient(envVal),
 
-		// TODO: scheduler tasksを、moduleと同じように、group:"scheduler_tasks"でまとめて登録できるようにする
+		// TODO: 無くてもいいようにする?
+		dikit.ProvideNamed(cache.NewDefaultWorkerCacheClient(envVal), "workerCache"),
+		db.NewDefaultWorkerDBClient(envVal),
+		mb.NewSubscriberConnection(envVal),
+		mb.NewPublisherConnection(envVal),
+		server.NewSubscribe,
+		server.NewPublish,
+		dikit.InjectWithTags(server.NewWorker, ``, `name:"workerCache"`, ``),
 
 		// scheduler
-		NewScheduler,
+		// タグ名の付いたキャッシュクライアントを注入
+		dikit.InjectWithTags(NewScheduler, `name:"schedulerCache"`, ``),
 		// TODO: httpサーバーは必要だが、scheduler管理用のエンドポイントのみにする
 
 	})
 
 	dikit.AppendInvocations([]any{
-		RegisterSchedulerLifeCycle,
+		dikit.InjectScheduledTasks(NewSchedulerApp),
 	})
 
 	// TODO: putputFxLogは、環境変数で変えれるようにする
 	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), true)
-}
-
-func NewScheduler(
-	redisClient *goredis.Client,
-	dbClient database.DatabaseClient,
-) (*scheduler.Scheduler, error) {
-	backend, err := distributed.NewBackend(&distributed.Config{
-		BackendType: distributed.BackendTypeRedis,
-		Client:      redisClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	recoveryRepo := recovery.NewRedisStateRepository(redisClient)
-	controlRepo := control.NewRedisStateRepository(redisClient, "")
-
-	s := scheduler.New(backend,
-		scheduler.WithLogger(logkit.Logger()),
-		scheduler.WithRecovery(recoveryRepo),
-		scheduler.WithControl(controlRepo),
-		scheduler.WithHistory(dbClient),
-	)
-
-	return s, nil
-
-}
-
-func RegisterSchedulerLifeCycle(lc dikit.LC, s *scheduler.Scheduler) error {
-	// TODO: httpサーバーの起動も必要そう
-
-	// TODO: 登録方法を変える: AsScheduledTask()を使って、fxに登録して、インジェクトして使うようにする。
-	RegisterTasks(s)
-
-	return nil
 }

@@ -1,18 +1,77 @@
 package scheduler
 
 import (
-	"github.com/ensoria/scheduler/pkg/cron"
+	"context"
+	"fmt"
+
+	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
+	"github.com/ensoria/projecttemplate/internal/scheduler/task"
+	"github.com/ensoria/scheduler/pkg/control"
+	"github.com/ensoria/scheduler/pkg/database"
+	"github.com/ensoria/scheduler/pkg/distributed"
+	"github.com/ensoria/scheduler/pkg/recovery"
+	"github.com/ensoria/scheduler/pkg/scheduler"
 	sched "github.com/ensoria/scheduler/pkg/scheduler"
+	goredis "github.com/redis/go-redis/v9"
 )
 
-type ScheduledTask struct {
-	Name string
-	Cron *cron.Cron
-	Task sched.Task
+func NewScheduler(
+	redisClient *goredis.Client,
+	dbClient database.DatabaseClient,
+) (*scheduler.Scheduler, error) {
+	backend, err := distributed.NewBackend(&distributed.Config{
+		BackendType: distributed.BackendTypeRedis,
+		Client:      redisClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	recoveryRepo := recovery.NewRedisStateRepository(redisClient)
+	controlRepo := control.NewRedisStateRepository(redisClient, "")
+
+	s := scheduler.New(backend,
+		scheduler.WithLogger(logkit.Logger()),
+		scheduler.WithRecovery(recoveryRepo),
+		scheduler.WithControl(controlRepo),
+		scheduler.WithHistory(dbClient),
+	)
+
+	return s, nil
+
+}
+
+func NewSchedulerApp(lc dikit.LC, s *scheduler.Scheduler, tasks []*task.ScheduledTask) error {
+	// TODO: httpサーバーの起動も必要そう
+
+	RegisterTasks(s, tasks)
+
+	// REFACTOR: dikit.RegisterSchedulerLifeCycle()関数に移動
+	lc.Append(dikit.Hook{
+		OnStart: func(ctx context.Context) error {
+			// TODO: httpサーバーも一緒にlifecycleで管理する?それとも分けるか?
+			fmt.Println("Starting scheduler...")
+			if err := s.Start(ctx); err != nil {
+				return fmt.Errorf("failed to start scheduler: %w", err)
+			}
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			// TODO: httpサーバーも一緒にlifecycleで管理する?それとも分けるか?
+
+			if err := s.Shutdown(ctx); err != nil {
+				return fmt.Errorf("scheduler shutdown error: %v", err)
+			}
+			return nil
+		},
+	})
+
+	return nil
 }
 
 // TODO: 各モジュールで、ScheduledTaskを、fxに登録する
-func RegisterTasks(s *sched.Scheduler, tasks []ScheduledTask) error {
+func RegisterTasks(s *sched.Scheduler, tasks []*task.ScheduledTask) error {
 	for _, task := range tasks {
 		if err := s.SetSchedule(task.Name, task.Cron, task.Task); err != nil {
 			return err

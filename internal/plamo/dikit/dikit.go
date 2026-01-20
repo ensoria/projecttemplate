@@ -91,7 +91,7 @@ func AsGRPCService(f any) any {
 func AsScheduledTask(f any) any {
 	return fx.Annotate(
 		f,
-		fx.ResultTags(`group:"scheduled_tasks`),
+		fx.ResultTags(`group:"scheduled_tasks"`),
 	)
 }
 
@@ -99,7 +99,7 @@ func AsScheduledTask(f any) any {
 
 // 汎用版 - 複数の引数位置に対してタグを指定可能
 // 例:
-// dikit.InjectWithTags(SomeConstructor, “, `name:"Something"`, `group:"items"`),
+// dikit.InjectWithTags(SomeConstructor, `name:"Something"`, `group:"items"`),
 func InjectWithTags(constructor any, tags ...string) any {
 	return fx.Annotate(constructor, fx.ParamTags(tags...))
 }
@@ -120,6 +120,7 @@ func InjectSubscriber(constructor any, tag string) any {
 	)
 }
 
+// DELETE: この関数は不要になる?必要だとしても、引数を2番目に設定する必要があるか?
 func InjectGRPCServices(f any) any {
 	return fx.Annotate(
 		f,
@@ -134,14 +135,14 @@ func InjectGRPCClient(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
 }
 
-// TODO:
 func InjectScheduledTasks(f any) any {
 	return fx.Annotate(
 		f,
-		fx.ParamTags(`group:"scheduled_tasks"`),
+		fx.ParamTags(``, ``, `group:"scheduled_tasks"`),
 	)
 }
 
+// REFACTOR: serverに移すか?
 // HTTP/WebSocket controllers lifecycle registration
 func RegisterHTTPServerLifecycle(lc LC, srv *http.Server) {
 	lc.Append(Hook{
@@ -161,6 +162,7 @@ func RegisterHTTPServerLifecycle(lc LC, srv *http.Server) {
 	})
 }
 
+// REFACTOR: serverに移すか?
 // gRPC server lifecycle registration
 func RegisterGRPCServerLifecycle(lc LC, grpcSrv *grpc.Server) {
 	if grpcSrv == nil {

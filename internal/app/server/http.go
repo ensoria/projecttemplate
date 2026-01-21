@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -33,7 +34,7 @@ func NewHTTPApp(envVal *string) func(lc dikit.LC, httpPipeline *pipeline.HTTP, w
 			Addr: fmt.Sprintf(":%d", params.Server.Port),
 		}
 
-		dikit.RegisterHTTPServerLifecycle(lc, httpSrv)
+		RegisterHTTPServerLifecycle(lc, httpSrv)
 		return httpSrv
 	}
 }
@@ -60,6 +61,25 @@ func CreateHTTPPipeline(modules []*rest.Module) *pipeline.HTTP {
 			mw.NewSimpleCors(cors),
 		},
 	}
+}
+
+// HTTP/WebSocket controllers lifecycle registration
+func RegisterHTTPServerLifecycle(lc dikit.LC, srv *http.Server) {
+	lc.Append(dikit.Hook{
+		OnStart: func(ctx context.Context) error {
+			go func() {
+				slog.Info("HTTP server starting", "addr", srv.Addr)
+				if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+					slog.Error("HTTP server ListenAndServe error", "error", err)
+				}
+			}()
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			slog.Info("Shutting down HTTP server")
+			return srv.Shutdown(ctx)
+		},
+	})
 }
 
 func logIncomingRequest(req *rest.Request, res *rest.Response) {

@@ -2,10 +2,6 @@ package dikit
 
 import (
 	"context"
-	"net"
-	"net/http"
-
-	"log/slog"
 
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
@@ -110,6 +106,8 @@ func InjectWithTags(constructor any, tags ...string) any {
 	return fx.Annotate(constructor, fx.ParamTags(tags...))
 }
 
+// TODO: 以下のinjectorsは、特定の場合にしか使われないので、ここではなくapp側に置く
+
 func InjectHTTPModules(f any) any {
 	return fx.Annotate(f, fx.ParamTags(`group:"http_modules"`))
 }
@@ -155,63 +153,16 @@ func InjectScheduledTasks(f any) any {
 	)
 }
 
-// REFACTOR: serverに移すか?
-// HTTP/WebSocket controllers lifecycle registration
-func RegisterHTTPServerLifecycle(lc LC, srv *http.Server) {
-	lc.Append(Hook{
-		OnStart: func(ctx context.Context) error {
-			go func() {
-				slog.Info("HTTP server starting", "addr", srv.Addr)
-				if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-					slog.Error("HTTP server ListenAndServe error", "error", err)
-				}
-			}()
-			return nil
-		},
-		OnStop: func(ctx context.Context) error {
-			slog.Info("Shutting down HTTP server")
-			return srv.Shutdown(ctx)
-		},
-	})
-}
-
-// REFACTOR: serverに移すか?
-// gRPC server lifecycle registration
-func RegisterGRPCServerLifecycle(lc LC, grpcSrv *grpc.Server) {
-	if grpcSrv == nil {
-		return
-	}
-
-	lc.Append(Hook{
-		OnStart: func(ctx context.Context) error {
-			go func() {
-				// TODO: ポートを設定可能にする
-				listen, err := net.Listen("tcp", ":50051")
-				if err != nil {
-					slog.Error("gRPC server failed to listen", "error", err)
-					return
-				}
-				slog.Info("gRPC server starting", "addr", ":50051")
-				if err := grpcSrv.Serve(listen); err != nil {
-					slog.Error("gRPC server failed to start", "error", err)
-				}
-			}()
-			return nil
-		},
-		OnStop: func(ctx context.Context) error {
-			slog.Info("Shutting down gRPC server")
-			grpcSrv.GracefulStop()
-			return nil
-		},
-	})
-}
-
+// TODO: lifecycleもsubscriberとpublisherの登録でしか使われないので、ここでは無くてもいいかも
+// 名前も、Subscriberに特化したものだと分かるように変える
 func RegisterOnStartLifecycle(lc LC, onStart func(ctx context.Context) error) {
 	lc.Append(Hook{
 		OnStart: onStart,
 	})
 }
 
+// こっちも名前を変える。他でも使われてるが、Publisher以外で使われているところは、
+// この関数を使わず、そのままlcを使う
 func RegisterOnStopLifecycle(lc LC, onStop func(ctx context.Context) error) {
 	lc.Append(Hook{
 		OnStop: onStop,

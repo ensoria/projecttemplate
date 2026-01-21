@@ -2,6 +2,8 @@ package server
 
 import (
 	"github.com/ensoria/config/pkg/registry"
+	mbApp "github.com/ensoria/projecttemplate/internal/app/mb"
+	workerApp "github.com/ensoria/projecttemplate/internal/app/worker"
 	"github.com/ensoria/projecttemplate/internal/infra/cache"
 	"github.com/ensoria/projecttemplate/internal/infra/db"
 	_ "github.com/ensoria/projecttemplate/internal/infra/grpcclt"
@@ -30,11 +32,11 @@ func Run(envVal *string) {
 		dikit.InjectHTTPModules(CreateHTTPPipeline),
 		dikit.InjectWSModules(CreateWSRouter),
 		dikit.InjectGRPCServices(CreateGRPCServices),
-		NewSubscribe,
-		NewPublish,
+		mbApp.NewSubscribe,
+		mbApp.NewPublish,
 
 		// worker
-		dikit.InjectWorkerJobs(NewWorker),
+		dikit.InjectWorkerJobs(workerApp.NewWorker),
 	})
 
 	dikit.AppendInvocations([]any{

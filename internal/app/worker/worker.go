@@ -27,7 +27,9 @@ func NewWorker(
 		worker.WithHistory(historyRepo),
 	)
 
-	RegisterDefaultJobs(w, jobs)
+	for _, j := range jobs {
+		w.Register(j.Name, j.Handler, j.Options)
+	}
 
 	// ワーカーのContext
 	var workerCtx context.Context
@@ -50,14 +52,5 @@ func NewWorker(
 	})
 
 	return w
-
-}
-
-// // FIXME: まとめてジョブ []job.JobHandlerを受け取って登録できるようにする。
-// // 各job.JobHandlerは、モジュールごとに定義するようにする。
-func RegisterDefaultJobs(w *worker.Worker, jobs []*appJob.JobHandler) {
-	for _, j := range jobs {
-		w.Register(j.Name, j.Handler, j.Options)
-	}
 
 }

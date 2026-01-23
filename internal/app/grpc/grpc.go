@@ -11,6 +11,7 @@ import (
 	"github.com/ensoria/grpcgear/pkg/interceptor/recovery/recoverysrv"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
+	"go.uber.org/fx"
 	ggrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -91,4 +92,11 @@ func RegisterGRPCServerLifecycle(lc dikit.LC, grpcSrv *ggrpc.Server) {
 			return nil
 		},
 	})
+}
+
+func InjectGRPCServices(f any) any {
+	return fx.Annotate(
+		f,
+		fx.ParamTags(``, dikit.GroupTagGRPCServices),
+	)
 }

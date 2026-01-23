@@ -14,6 +14,7 @@ import (
 	"github.com/ensoria/rest/pkg/pipeline"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/websocket/pkg/wsrouter"
+	"go.uber.org/fx"
 )
 
 // HTTPサーバーの初期化
@@ -80,6 +81,10 @@ func RegisterHTTPServerLifecycle(lc dikit.LC, srv *http.Server) {
 			return srv.Shutdown(ctx)
 		},
 	})
+}
+
+func InjectHTTPModules(f any) any {
+	return fx.Annotate(f, fx.ParamTags(dikit.GroupTagHttpModules))
 }
 
 func logIncomingRequest(req *rest.Request, res *rest.Response) {

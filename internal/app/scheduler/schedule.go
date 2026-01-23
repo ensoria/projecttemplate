@@ -14,6 +14,7 @@ import (
 	"github.com/ensoria/scheduler/pkg/scheduler"
 	sched "github.com/ensoria/scheduler/pkg/scheduler"
 	goredis "github.com/redis/go-redis/v9"
+	"go.uber.org/fx"
 )
 
 func NewScheduler(
@@ -74,7 +75,6 @@ func NewSchedulerApp(lc dikit.LC, s *scheduler.Scheduler, tasks []*task.Schedule
 	return nil
 }
 
-// TODO: 各モジュールで、ScheduledTaskを、fxに登録する
 func RegisterTasks(s *sched.Scheduler, tasks []*task.ScheduledTask) error {
 	for _, task := range tasks {
 		if err := s.SetSchedule(task.Name, task.Cron, task.Task); err != nil {
@@ -83,4 +83,11 @@ func RegisterTasks(s *sched.Scheduler, tasks []*task.ScheduledTask) error {
 	}
 
 	return nil
+}
+
+func InjectScheduledTasks(f any) any {
+	return fx.Annotate(
+		f,
+		fx.ParamTags(``, ``, dikit.GroupTagScheduledTasks),
+	)
 }

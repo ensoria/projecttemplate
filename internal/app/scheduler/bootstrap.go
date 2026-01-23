@@ -38,7 +38,7 @@ func Start(envVal *string) {
 	})
 
 	dikit.AppendInvocations([]any{
-		dikit.InjectScheduledTasks(NewSchedulerApp),
+		InjectScheduledTasks(NewSchedulerApp),
 	})
 
 	// TODO: putputFxLogは、環境変数で変えれるようにする

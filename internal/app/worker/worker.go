@@ -11,6 +11,7 @@ import (
 	"github.com/ensoria/worker/pkg/queue"
 	"github.com/ensoria/worker/pkg/worker"
 	goredis "github.com/redis/go-redis/v9"
+	"go.uber.org/fx"
 )
 
 func NewWorker(
@@ -53,4 +54,11 @@ func NewWorker(
 
 	return w
 
+}
+
+func InjectWorkerJobs(f any) any {
+	return fx.Annotate(
+		f,
+		fx.ParamTags(``, ``, ``, dikit.GroupTagWorkerJobs),
+	)
 }

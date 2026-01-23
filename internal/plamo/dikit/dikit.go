@@ -7,6 +7,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+const GroupTagHttpModules = `group:"http_modules"`
+const GroupTagWSModules = `group:"ws_modules"`
+const GroupTagGRPCServices = `group:"grpc_services"`
+const GroupTagWorkerJobs = `group:"worker_jobs"`
+const GroupTagScheduledTasks = `group:"scheduled_tasks"`
+
 // gRPCサービス登録用のインターフェース
 type GRPCServiceRegistrar interface {
 	RegisterWithServer(*grpc.Server)
@@ -64,14 +70,14 @@ func ProvideNamed(constructor any, tag string) any {
 func AsHTTPModule(f any) any {
 	return fx.Annotate(
 		f,
-		fx.ResultTags(`group:"http_modules"`),
+		fx.ResultTags(GroupTagHttpModules),
 	)
 }
 
 func AsWSModule(f any) any {
 	return fx.Annotate(
 		f,
-		fx.ResultTags(`group:"ws_modules"`),
+		fx.ResultTags(GroupTagWSModules),
 	)
 }
 
@@ -79,21 +85,21 @@ func AsGRPCService(f any) any {
 	return fx.Annotate(
 		f,
 		fx.As(new(GRPCServiceRegistrar)),
-		fx.ResultTags(`group:"grpc_services"`),
+		fx.ResultTags(GroupTagGRPCServices),
 	)
 }
 
 func AsWorkerJob(f any) any {
 	return fx.Annotate(
 		f,
-		fx.ResultTags(`group:"worker_jobs"`),
+		fx.ResultTags(GroupTagWorkerJobs),
 	)
 }
 
 func AsScheduledTask(f any) any {
 	return fx.Annotate(
 		f,
-		fx.ResultTags(`group:"scheduled_tasks"`),
+		fx.ResultTags(GroupTagScheduledTasks),
 	)
 }
 
@@ -106,16 +112,6 @@ func InjectWithTags(constructor any, tags ...string) any {
 	return fx.Annotate(constructor, fx.ParamTags(tags...))
 }
 
-// TODO: 以下のinjectorsは、特定の場合にしか使われないので、ここではなくapp側に置く
-
-func InjectHTTPModules(f any) any {
-	return fx.Annotate(f, fx.ParamTags(`group:"http_modules"`))
-}
-
-func InjectWSModules(f any) any {
-	return fx.Annotate(f, fx.ParamTags(`group:"ws_modules"`))
-}
-
 // Subscriber注入用
 func InjectSubscriber(constructor any, tag string) any {
 	return fx.Annotate(
@@ -124,32 +120,11 @@ func InjectSubscriber(constructor any, tag string) any {
 	)
 }
 
-func InjectGRPCServices(f any) any {
-	return fx.Annotate(
-		f,
-		fx.ParamTags(``, `group:"grpc_services"`),
-	)
-}
-
 // gRPCクライアントの注入用
 // 実際には引数が1つだけの場合は汎用的に使えますが、
 // 汎用的に使いたい場合は、別の関数を用意するか、IbjectWithTagsを使ってください。
 func InjectGRPCClient(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
-}
-
-func InjectWorkerJobs(f any) any {
-	return fx.Annotate(
-		f,
-		fx.ParamTags(``, ``, ``, `group:"worker_jobs"`),
-	)
-}
-
-func InjectScheduledTasks(f any) any {
-	return fx.Annotate(
-		f,
-		fx.ParamTags(``, ``, `group:"scheduled_tasks"`),
-	)
 }
 
 // TODO: lifecycleもsubscriberとpublisherの登録でしか使われないので、ここでは無くてもいいかも

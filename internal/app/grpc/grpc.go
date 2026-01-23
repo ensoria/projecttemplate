@@ -39,11 +39,6 @@ func NewGRPCApp(envVal *string) func(lc dikit.LC, grpcServices []dikit.GRPCServi
 	}
 }
 
-// DELETE: この関数は不要?
-func CreateGRPCServices(modules []dikit.GRPCServiceRegistrar) []dikit.GRPCServiceRegistrar {
-	return modules
-}
-
 func NewGRPCServer(logger logging.Logger) *ggrpc.Server {
 	logCfg := LogConfig()
 	recCfg := recoverysrv.DefaultRecoveryConfig()

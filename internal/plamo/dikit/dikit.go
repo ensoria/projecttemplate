@@ -124,11 +124,10 @@ func InjectSubscriber(constructor any, tag string) any {
 	)
 }
 
-// DELETE: この関数は不要になる?必要だとしても、引数を2番目に設定する必要があるか?
 func InjectGRPCServices(f any) any {
 	return fx.Annotate(
 		f,
-		fx.ParamTags(`group:"grpc_services"`),
+		fx.ParamTags(``, `group:"grpc_services"`),
 	)
 }
 

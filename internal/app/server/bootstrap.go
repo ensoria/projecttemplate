@@ -32,7 +32,6 @@ func Run(envVal *string) {
 		// controllers
 		dikit.InjectHTTPModules(CreateHTTPPipeline),
 		dikit.InjectWSModules(CreateWSRouter),
-		dikit.InjectGRPCServices(grpcApp.CreateGRPCServices),
 		mbApp.NewSubscribe,
 		mbApp.NewPublish,
 
@@ -43,7 +42,7 @@ func Run(envVal *string) {
 	dikit.AppendInvocations([]any{
 		// application invocations
 		NewHTTPApp(envVal),
-		grpcApp.NewGRPCApp(envVal),
+		dikit.InjectGRPCServices(grpcApp.NewGRPCApp(envVal)),
 	})
 
 	// TODO: 最後の引数の、putputFxLogは、環境変数で変えれるようにする

@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/ensoria/config/pkg/registry"
+	grpcApp "github.com/ensoria/projecttemplate/internal/app/grpc"
 	mbApp "github.com/ensoria/projecttemplate/internal/app/mb"
 	workerApp "github.com/ensoria/projecttemplate/internal/app/worker"
 	"github.com/ensoria/projecttemplate/internal/infra/cache"
@@ -31,7 +32,7 @@ func Run(envVal *string) {
 		// controllers
 		dikit.InjectHTTPModules(CreateHTTPPipeline),
 		dikit.InjectWSModules(CreateWSRouter),
-		dikit.InjectGRPCServices(CreateGRPCServices),
+		dikit.InjectGRPCServices(grpcApp.CreateGRPCServices),
 		mbApp.NewSubscribe,
 		mbApp.NewPublish,
 
@@ -42,7 +43,7 @@ func Run(envVal *string) {
 	dikit.AppendInvocations([]any{
 		// application invocations
 		NewHTTPApp(envVal),
-		NewGRPCApp(envVal),
+		grpcApp.NewGRPCApp(envVal),
 	})
 
 	// TODO: 最後の引数の、putputFxLogは、環境変数で変えれるようにする

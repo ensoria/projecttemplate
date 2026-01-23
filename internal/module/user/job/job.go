@@ -7,12 +7,12 @@ import (
 	"log"
 	"time"
 
-	modJob "github.com/ensoria/projecttemplate/internal/app/server/job" // TODO: 名前を考え直す
+	appJob "github.com/ensoria/projecttemplate/internal/app/worker/job" // TODO: 名前を考え直す
 	libWorker "github.com/ensoria/worker/pkg/job"
 )
 
-func NewUserJob(j *SimpleJob) *modJob.JobHandler {
-	return &modJob.JobHandler{
+func NewUserJob(j *SimpleJob) *appJob.JobHandler {
+	return &appJob.JobHandler{
 		Name:    "simple_log",
 		Handler: j.SimpleLogHandler,
 		Options: &libWorker.Option{

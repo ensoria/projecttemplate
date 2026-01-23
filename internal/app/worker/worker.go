@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	modJob "github.com/ensoria/projecttemplate/internal/app/server/job"
+	appJob "github.com/ensoria/projecttemplate/internal/app/worker/job"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/worker/pkg/database"
 	"github.com/ensoria/worker/pkg/history"
@@ -17,7 +17,7 @@ func NewWorker(
 	lc dikit.LC,
 	cacheClient *goredis.Client,
 	dbClient database.DatabaseClient,
-	jobs []*modJob.JobHandler,
+	jobs []*appJob.JobHandler,
 ) worker.Enqueuer {
 
 	qStorage := queue.NewRedisQueue(cacheClient)
@@ -55,7 +55,7 @@ func NewWorker(
 
 // // FIXME: まとめてジョブ []job.JobHandlerを受け取って登録できるようにする。
 // // 各job.JobHandlerは、モジュールごとに定義するようにする。
-func RegisterDefaultJobs(w *worker.Worker, jobs []*modJob.JobHandler) {
+func RegisterDefaultJobs(w *worker.Worker, jobs []*appJob.JobHandler) {
 	for _, j := range jobs {
 		w.Register(j.Name, j.Handler, j.Options)
 	}

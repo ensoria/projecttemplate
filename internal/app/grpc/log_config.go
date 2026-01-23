@@ -1,4 +1,4 @@
-package grpckit
+package grpc
 
 import (
 	"sort"

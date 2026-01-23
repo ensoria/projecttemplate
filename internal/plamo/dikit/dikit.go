@@ -56,13 +56,42 @@ func ProvideAs[T any](concrete any) any {
 	return fx.Annotate(concrete, fx.As(new(T)))
 }
 
-// Tのインターフェースに対して、該当するconcreteが複数ある場合に、
-// タグ付きで登録することで注入する際にどのconcreteかを指定できる
+// 具象型をインターフェースTに変換して、名前付きで提供する
+// 同じインターフェースに対して複数の実装がある場合に使用
+//
+// 使用例:
+//
+//	dikit.ProvideAsNamed[mb.SubscribeHandler](usermb.NewUserSubscriber, "UserSubscriber")
+//
+// 注入側では `name:"UserSubscriber"` タグで mb.SubscribeHandler として受け取る
+//
+// ProvideNamedとの違い:
+//   - ProvideAsNamed: 具象型 → インターフェースT に変換して名前付きで提供
+//   - ProvideNamed: 具象型のまま名前付きで提供（型変換なし）
+//
+// 使い分け:
+//   - 具象型をインターフェースとして抽象化したい場合 → ProvideAsNamed
+//   - 具象型のまま、または既にインターフェース型を返す場合 → ProvideNamed
 func ProvideAsNamed[T any](concrete any, tag string) any {
 	return fx.Annotate(concrete, fx.As(new(T)), fx.ResultTags(`name:"`+tag+`"`))
 }
 
-// TODO: ProvideAsNamedとの違いは?
+// 具象型のまま名前付きで提供する（インターフェース変換なし）
+// 同じ具象型を複数提供する場合や、インターフェースを使わない場合に使用
+//
+// 使用例:
+//
+//	dikit.ProvideNamed(grpcclt.NewPostConnection, grpcclt.PostConnName)
+//
+// 注入側では `name:"PostConn"` タグで grpc.ClientConnInterface として受け取る
+//
+// ProvideAsNamedとの違い:
+//   - ProvideAsNamed: 具象型 → インターフェースT に変換して名前付きで提供
+//   - ProvideNamed: 具象型のまま名前付きで提供（型変換なし）
+//
+// 使い分け:
+//   - インターフェースとして抽象化したい場合 → ProvideAsNamed
+//   - 具象型のまま提供したい場合（grpc.ClientConnInterfaceなど既にインターフェースの場合）→ ProvideNamed
 func ProvideNamed(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ResultTags(`name:"`+tag+`"`))
 }
@@ -127,21 +156,28 @@ func InjectGRPCClient(constructor any, tag string) any {
 	return fx.Annotate(constructor, fx.ParamTags(`name:"`+tag+`"`))
 }
 
-// TODO: lifecycleもsubscriberとpublisherの登録でしか使われないので、ここでは無くてもいいかも
-// 名前も、Subscriberに特化したものだと分かるように変える
+// === Lifecycles ===
+
+func RegisterLifecycle(lc LC, onStart func(ctx context.Context) error, onStop func(ctx context.Context) error) {
+	lc.Append(Hook{
+		OnStart: onStart,
+		OnStop:  onStop,
+	})
+}
+
 func RegisterOnStartLifecycle(lc LC, onStart func(ctx context.Context) error) {
 	lc.Append(Hook{
 		OnStart: onStart,
 	})
 }
 
-// こっちも名前を変える。他でも使われてるが、Publisher以外で使われているところは、
-// この関数を使わず、そのままlcを使う
 func RegisterOnStopLifecycle(lc LC, onStop func(ctx context.Context) error) {
 	lc.Append(Hook{
 		OnStop: onStop,
 	})
 }
+
+// === Fx App Run ===
 
 func ProvideAndRun(constructors []any, invocations []any, outputFxLog bool) {
 	options := []fx.Option{

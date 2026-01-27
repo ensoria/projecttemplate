@@ -3,8 +3,10 @@ package server
 import (
 	"github.com/ensoria/config/pkg/registry"
 	grpcApp "github.com/ensoria/projecttemplate/internal/app/grpc"
+	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
 	mbApp "github.com/ensoria/projecttemplate/internal/app/mb"
 	workerApp "github.com/ensoria/projecttemplate/internal/app/worker"
+	wsApp "github.com/ensoria/projecttemplate/internal/app/ws"
 	"github.com/ensoria/projecttemplate/internal/infra/cache"
 	"github.com/ensoria/projecttemplate/internal/infra/db"
 	_ "github.com/ensoria/projecttemplate/internal/infra/grpcclt"
@@ -13,11 +15,6 @@ import (
 	_ "github.com/ensoria/projecttemplate/internal/module"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 )
-
-// TODO: 別のファイルに分ける
-type GlobalError struct {
-	Message string `json:"message"`
-}
 
 func Run(envVal *string) {
 	registry.InitializeConfiguration(envVal, "./internal", "config")
@@ -30,8 +27,8 @@ func Run(envVal *string) {
 		mb.NewPublisherConnection(envVal),
 
 		// controllers
-		InjectHTTPModules(CreateHTTPPipeline),
-		InjectWSModules(CreateWSRouter),
+		httpApp.InjectHTTPModules(httpApp.CreateHTTPPipeline),
+		wsApp.InjectWSModules(wsApp.CreateWSRouter),
 		mbApp.NewSubscribe,
 		mbApp.NewPublish,
 
@@ -41,7 +38,7 @@ func Run(envVal *string) {
 
 	dikit.AppendInvocations([]any{
 		// application invocations
-		NewHTTPApp(envVal),
+		httpApp.NewHTTPApp(envVal),
 		grpcApp.InjectGRPCServices(grpcApp.NewGRPCApp(envVal)),
 	})
 

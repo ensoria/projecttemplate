@@ -1,4 +1,4 @@
-package server
+package http
 
 import (
 	"context"
@@ -16,6 +16,10 @@ import (
 	"github.com/ensoria/websocket/pkg/wsrouter"
 	"go.uber.org/fx"
 )
+
+type GlobalError struct {
+	Message string `json:"message"`
+}
 
 // HTTPサーバーの初期化
 func NewHTTPApp(envVal *string) func(lc dikit.LC, httpPipeline *pipeline.HTTP, wsRouter *wsrouter.Router) *http.Server {

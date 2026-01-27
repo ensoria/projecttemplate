@@ -1,4 +1,4 @@
-package server
+package ws
 
 import (
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"

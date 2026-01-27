@@ -7,6 +7,7 @@ import (
 	"github.com/ensoria/projecttemplate/internal/infra/mb"
 
 	mbApp "github.com/ensoria/projecttemplate/internal/app/mb"
+	schedulerApp "github.com/ensoria/projecttemplate/internal/app/scheduler"
 	workerApp "github.com/ensoria/projecttemplate/internal/app/worker"
 	_ "github.com/ensoria/projecttemplate/internal/module"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
@@ -32,13 +33,13 @@ func Start(envVal *string) {
 
 		// scheduler
 		// タグ名の付いたキャッシュクライアントを注入
-		dikit.InjectWithTags(NewScheduler, `name:"schedulerCache"`, ``),
+		dikit.InjectWithTags(schedulerApp.NewScheduler, `name:"schedulerCache"`, ``),
 		// TODO: httpサーバーは必要だが、scheduler管理用のエンドポイントのみにする
 
 	})
 
 	dikit.AppendInvocations([]any{
-		InjectScheduledTasks(NewSchedulerApp),
+		schedulerApp.InjectScheduledTasks(schedulerApp.NewSchedulerApp),
 	})
 
 	// TODO: putputFxLogは、環境変数で変えれるようにする

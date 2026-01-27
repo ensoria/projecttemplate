@@ -7,11 +7,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-const GroupTagHttpModules = `group:"http_modules"`
-const GroupTagWSModules = `group:"ws_modules"`
-const GroupTagGRPCServices = `group:"grpc_services"`
-const GroupTagWorkerJobs = `group:"worker_jobs"`
-const GroupTagScheduledTasks = `group:"scheduled_tasks"`
+const (
+	GroupTagHttpModules    = `group:"http_modules"`
+	GroupTagWSModules      = `group:"ws_modules"`
+	GroupTagGRPCServices   = `group:"grpc_services"`
+	GroupTagWorkerJobs     = `group:"worker_jobs"`
+	GroupTagScheduledTasks = `group:"scheduled_tasks"`
+)
 
 // gRPCサービス登録用のインターフェース
 type GRPCServiceRegistrar interface {

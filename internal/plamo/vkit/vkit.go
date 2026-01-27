@@ -25,6 +25,11 @@ func Map[T any](m map[string]T, ruleSets ...*rule.RuleSet) verr.ValidationErrorM
 // より詳細なメッセージでメッセージを定義したい場合は、各Module内で
 // 別のメッセージのRuleFactoryの定義を作成してください。
 
+var Required = rule.CreateStrNotEmpty(map[string]string{
+	"ja": "必須です",
+	"en": "this field is required",
+})
+
 var MaxLength = rule.CreateStrMaxLength(
 	map[string]string{
 		"ja": "最大文字数%dを超えています",

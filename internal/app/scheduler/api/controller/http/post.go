@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
 	"github.com/ensoria/projecttemplate/internal/app/scheduler/api/controller/dto"
 	"github.com/ensoria/projecttemplate/internal/plamo/vkit"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/scheduler/pkg/scheduler"
 	"github.com/ensoria/validator/pkg/rule"
 )
+
+// REFACTOR: 全体的に重複コードが多いので整理する
 
 type PauseTask struct {
 	scheduler *scheduler.Scheduler
@@ -26,7 +29,7 @@ func (c *PauseTask) Handle(r *rest.Request) *rest.Response {
 	if !exists {
 		return &rest.Response{
 			Code: http.StatusBadRequest,
-			Body: map[string]string{"error": "task name is required"},
+			Body: &httpApp.GlobalError{Message: "task name is required"},
 		}
 	}
 
@@ -45,13 +48,13 @@ func (c *PauseTask) Handle(r *rest.Request) *rest.Response {
 	if err := c.scheduler.PauseTask(ctx, taskName, pt.Reason); err != nil {
 		return &rest.Response{
 			Code: http.StatusInternalServerError,
-			Body: map[string]string{"error": err.Error()},
+			Body: &httpApp.GlobalError{Message: err.Error()},
 		}
 	}
 
 	return &rest.Response{
 		Code: http.StatusOK,
-		Body: map[string]string{"status": fmt.Sprintf("task [%s] paused", taskName)},
+		Body: &dto.TaskControl{Message: fmt.Sprintf("task [%s] paused", taskName)},
 	}
 
 }
@@ -66,9 +69,27 @@ func NewResumeTask(scheduler *scheduler.Scheduler) *ResumeTask {
 	}
 }
 
-func (c *ResumeTask) Handle(request *rest.Request) *rest.Response {
-	// TODO:
-	return nil
+func (c *ResumeTask) Handle(r *rest.Request) *rest.Response {
+	taskName, exists := r.PathValue("name")
+	if !exists {
+		return &rest.Response{
+			Code: http.StatusBadRequest,
+			Body: &httpApp.GlobalError{Message: "task name is required"},
+		}
+	}
+
+	ctx := r.Context()
+	if err := c.scheduler.ResumeTask(ctx, taskName); err != nil {
+		return &rest.Response{
+			Code: http.StatusInternalServerError,
+			Body: &httpApp.GlobalError{Message: err.Error()},
+		}
+	}
+
+	return &rest.Response{
+		Code: http.StatusOK,
+		Body: &dto.TaskControl{Message: fmt.Sprintf("task [%s] resumed", taskName)},
+	}
 }
 
 type DisableTask struct {
@@ -81,9 +102,39 @@ func NewDisableTask(scheduler *scheduler.Scheduler) *DisableTask {
 	}
 }
 
-func (c *DisableTask) Handle(request *rest.Request) *rest.Response {
-	// TODO:
-	return nil
+func (c *DisableTask) Handle(r *rest.Request) *rest.Response {
+	taskName, exists := r.PathValue("name")
+	if !exists {
+		return &rest.Response{
+			Code: http.StatusBadRequest,
+			Body: &httpApp.GlobalError{Message: "task name is required"},
+		}
+	}
+
+	dt, msgs := vkit.RestRequestBody[dto.DisableTask](
+		r,
+		&rule.RuleSet{Field: "reason", Rules: []rule.Rule{vkit.Required()}},
+	)
+	if msgs != nil {
+		return &rest.Response{
+			Code: http.StatusBadRequest,
+			Body: msgs,
+		}
+	}
+
+	ctx := r.Context()
+	if err := c.scheduler.DisableTask(ctx, taskName, dt.Reason); err != nil {
+		return &rest.Response{
+			Code: http.StatusInternalServerError,
+			Body: &httpApp.GlobalError{Message: err.Error()},
+		}
+	}
+
+	return &rest.Response{
+		Code: http.StatusOK,
+		Body: &dto.TaskControl{Message: fmt.Sprintf("task [%s] disabled", taskName)},
+	}
+
 }
 
 type EnableTask struct {
@@ -96,7 +147,25 @@ func NewEnableTask(scheduler *scheduler.Scheduler) *EnableTask {
 	}
 }
 
-func (c *EnableTask) Handle(request *rest.Request) *rest.Response {
-	// TODO:
-	return nil
+func (c *EnableTask) Handle(r *rest.Request) *rest.Response {
+	taskName, exists := r.PathValue("name")
+	if !exists {
+		return &rest.Response{
+			Code: http.StatusBadRequest,
+			Body: &httpApp.GlobalError{Message: "task name is required"},
+		}
+	}
+
+	ctx := r.Context()
+	if err := c.scheduler.EnableTask(ctx, taskName); err != nil {
+		return &rest.Response{
+			Code: http.StatusInternalServerError,
+			Body: &httpApp.GlobalError{Message: err.Error()},
+		}
+	}
+
+	return &rest.Response{
+		Code: http.StatusOK,
+		Body: &dto.TaskControl{Message: fmt.Sprintf("task [%s] enabled", taskName)},
+	}
 }

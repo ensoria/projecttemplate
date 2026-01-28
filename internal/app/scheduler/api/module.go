@@ -4,6 +4,7 @@ import (
 	"github.com/ensoria/config/pkg/appconfig"
 	"github.com/ensoria/config/pkg/registry"
 	"github.com/ensoria/projecttemplate/internal/app/scheduler/api/controller/http"
+	"github.com/ensoria/projecttemplate/internal/app/scheduler/api/middleware"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/rest/pkg/rest"
 )
@@ -14,47 +15,51 @@ func Params() (*appconfig.Parameters, error) {
 	return registry.ModuleParams(ModuleName)
 }
 
-// TODO: 全部middlewareで、特定のクライアントからしかアクセスできないようにする
-
 func NewListTaskModule(listTasks *http.ListTasks) *rest.Module {
 	return &rest.Module{
-		Path: "/_/tasks",
-		Get:  listTasks,
+		Path:        "/_/tasks",
+		Get:         listTasks,
+		Middlewares: []rest.Middleware{middleware.SysAdminOnly},
 	}
 }
 
 func NewTaskStateModule(getStatus *http.GetStatus) *rest.Module {
 	return &rest.Module{
-		Path: "/_/tasks/{name}",
-		Get:  getStatus,
+		Path:        "/_/tasks/{name}",
+		Get:         getStatus,
+		Middlewares: []rest.Middleware{middleware.SysAdminOnly},
 	}
 }
 
 func NewPauseTaskModule(pauseTask *http.ResumeTask) *rest.Module {
 	return &rest.Module{
-		Path: "/_/tasks/{name}/pause",
-		Post: pauseTask,
+		Path:        "/_/tasks/{name}/pause",
+		Post:        pauseTask,
+		Middlewares: []rest.Middleware{middleware.SysAdminOnly},
 	}
 }
 
 func NewResumeTaskModule(resumeTask *http.ResumeTask) *rest.Module {
 	return &rest.Module{
-		Path: "/_/tasks/{name}/resume",
-		Post: resumeTask,
+		Path:        "/_/tasks/{name}/resume",
+		Post:        resumeTask,
+		Middlewares: []rest.Middleware{middleware.SysAdminOnly},
 	}
 }
 
 func NewDisableTaskModule(disableTask *http.DisableTask) *rest.Module {
 	return &rest.Module{
-		Path: "/_/tasks/{name}/disable",
-		Post: disableTask,
+		Path:        "/_/tasks/{name}/disable",
+		Post:        disableTask,
+		Middlewares: []rest.Middleware{middleware.SysAdminOnly},
 	}
 }
 
 func NewEnableTaskModule(enableTask *http.EnableTask) *rest.Module {
 	return &rest.Module{
-		Path: "/_/tasks/{name}/enable",
-		Post: enableTask,
+		Path:        "/_/tasks/{name}/enable",
+		Post:        enableTask,
+		Middlewares: []rest.Middleware{middleware.SysAdminOnly},
 	}
 }
 

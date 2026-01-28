@@ -3,11 +3,10 @@ package http
 import (
 	"net/http"
 
+	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/scheduler/pkg/scheduler"
 )
-
-// TODO: schedulerとworkerのGETハンドラを実装
 
 type ListTasks struct {
 	scheduler *scheduler.Scheduler
@@ -25,7 +24,7 @@ func (c *ListTasks) Handle(r *rest.Request) *rest.Response {
 	if err != nil {
 		return &rest.Response{
 			Code: http.StatusInternalServerError,
-			Body: map[string]string{"error": err.Error()},
+			Body: &httpApp.GlobalError{Message: err.Error()},
 		}
 	}
 	return &rest.Response{
@@ -49,7 +48,7 @@ func (c *GetStatus) Handle(r *rest.Request) *rest.Response {
 	if !exists {
 		return &rest.Response{
 			Code: http.StatusBadRequest,
-			Body: map[string]string{"error": "task name is required"},
+			Body: &httpApp.GlobalError{Message: "task name is required"},
 		}
 	}
 
@@ -58,7 +57,7 @@ func (c *GetStatus) Handle(r *rest.Request) *rest.Response {
 	if err != nil {
 		return &rest.Response{
 			Code: http.StatusNotFound,
-			Body: map[string]string{"error": err.Error()},
+			Body: &httpApp.GlobalError{Message: err.Error()},
 		}
 	}
 

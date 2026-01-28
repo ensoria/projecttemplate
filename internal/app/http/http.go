@@ -55,7 +55,15 @@ func CreateHTTPPipeline(modules []*rest.Module) *pipeline.HTTP {
 	if err != nil {
 		log.Fatalf("default config parameters not found: %s", err)
 	}
-	cors := configParams.Cors
+
+	cors := &mw.CORSSettings{
+		AllowOrigin:      configParams.Cors.AllowOrigin(),
+		AllowMethods:     configParams.Cors.AllowMethods(),
+		AllowHeaders:     configParams.Cors.AllowHeaders(),
+		ExposeHeaders:    configParams.Cors.ExposeHeaders(),
+		MaxAge:           configParams.Cors.MaxAge(),
+		AllowCredentials: configParams.Cors.AllowCredentials(),
+	}
 
 	return &pipeline.HTTP{
 		Modules: modules,
@@ -63,7 +71,7 @@ func CreateHTTPPipeline(modules []*rest.Module) *pipeline.HTTP {
 			mw.Logging(logIncomingRequest),
 			mw.RecoveryWithLogger(panicResponse, logPanicDetails),
 			mw.VerifyBodyParsable,
-			mw.NewSimpleCors(cors),
+			mw.NewCORS(cors),
 		},
 	}
 }

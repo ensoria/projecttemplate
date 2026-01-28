@@ -57,12 +57,12 @@ func CreateHTTPPipeline(modules []*rest.Module) *pipeline.HTTP {
 	}
 
 	cors := &mw.CORSSettings{
-		AllowOrigin:      configParams.Cors.AllowOrigin(),
-		AllowMethods:     configParams.Cors.AllowMethods(),
-		AllowHeaders:     configParams.Cors.AllowHeaders(),
-		ExposeHeaders:    configParams.Cors.ExposeHeaders(),
-		MaxAge:           configParams.Cors.MaxAge(),
-		AllowCredentials: configParams.Cors.AllowCredentials(),
+		AllowOrigin:      configParams.CORS.AllowOrigin(),
+		AllowMethods:     configParams.CORS.AllowMethods(),
+		AllowHeaders:     configParams.CORS.AllowHeaders(),
+		ExposeHeaders:    configParams.CORS.ExposeHeaders(),
+		MaxAge:           configParams.CORS.MaxAge(),
+		AllowCredentials: configParams.CORS.AllowCredentials(),
 	}
 
 	return &pipeline.HTTP{

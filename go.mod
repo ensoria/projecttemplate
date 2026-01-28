@@ -3,7 +3,7 @@ module github.com/ensoria/projecttemplate
 go 1.24.2
 
 require (
-	github.com/ensoria/config v0.0.14
+	github.com/ensoria/config v0.0.15
 	github.com/ensoria/grpcgear v0.0.2
 	github.com/ensoria/mb v0.0.1
 	github.com/ensoria/rest v0.0.14

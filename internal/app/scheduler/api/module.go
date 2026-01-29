@@ -15,7 +15,7 @@ func Params() (*appconfig.Parameters, error) {
 	return registry.ModuleParams(ModuleName)
 }
 
-func NewListTaskModule(listTasks *http.ListTasks) *rest.Module {
+func NewListTasksModule(listTasks *http.ListTasks) *rest.Module {
 	return &rest.Module{
 		Path:        "/_/tasks",
 		Get:         listTasks,
@@ -66,7 +66,7 @@ func NewEnableTaskModule(enableTask *http.EnableTask) *rest.Module {
 func init() {
 	dikit.AppendConstructors([]any{
 		http.NewListTasks,
-		dikit.AsHTTPModule(NewListTaskModule),
+		dikit.AsHTTPModule(NewListTasksModule),
 
 		http.NewGetStatus,
 		dikit.AsHTTPModule(NewTaskStateModule),

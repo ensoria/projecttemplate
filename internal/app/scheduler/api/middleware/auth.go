@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
+	"github.com/ensoria/projecttemplate/internal/app/http/dto"
 	"github.com/ensoria/rest/pkg/rest"
 )
 
@@ -13,7 +13,7 @@ func SysAdminOnly(next rest.Handler) rest.Handler {
 	return func(r *rest.Request) *rest.Response {
 		return &rest.Response{
 			Code: http.StatusForbidden,
-			Body: httpApp.GlobalError{Message: "access denied"},
+			Body: dto.Error{Message: "access denied"},
 		}
 
 		// return next(r)

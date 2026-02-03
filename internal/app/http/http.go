@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/ensoria/config/pkg/registry"
+	"github.com/ensoria/projecttemplate/internal/app/http/dto"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/ensoria/rest/pkg/mw"
@@ -16,10 +17,6 @@ import (
 	"github.com/ensoria/websocket/pkg/wsrouter"
 	"go.uber.org/fx"
 )
-
-type GlobalError struct {
-	Message string `json:"message"`
-}
 
 // HTTPサーバーの初期化
 func NewHTTPApp(envVal *string) func(lc dikit.LC, httpPipeline *pipeline.HTTP, wsRouter *wsrouter.Router) *http.Server {
@@ -48,7 +45,7 @@ func CreateHTTPPipeline(modules []*rest.Module) *pipeline.HTTP {
 	// TODO: 別のファイルに分ける
 	panicResponse := &rest.Response{
 		Code: http.StatusInternalServerError,
-		Body: &GlobalError{Message: "internal server error"},
+		Body: &dto.Error{Message: "internal server error"},
 	}
 
 	configParams, err := registry.ModuleParams("default")

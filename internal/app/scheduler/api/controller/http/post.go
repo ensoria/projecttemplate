@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
 	"github.com/ensoria/projecttemplate/internal/app/scheduler/api/controller/dto"
 	"github.com/ensoria/projecttemplate/internal/plamo/vkit"
 	"github.com/ensoria/rest/pkg/rest"
@@ -29,7 +28,7 @@ func (c *PauseTask) Handle(r *rest.Request) *rest.Response {
 	if !exists {
 		return &rest.Response{
 			Code: http.StatusBadRequest,
-			Body: &httpApp.GlobalError{Message: "task name is required"},
+			Body: &dto.TaskControlError{Message: "task name is required"},
 		}
 	}
 
@@ -48,7 +47,7 @@ func (c *PauseTask) Handle(r *rest.Request) *rest.Response {
 	if err := c.scheduler.PauseTask(ctx, taskName, pt.Reason); err != nil {
 		return &rest.Response{
 			Code: http.StatusInternalServerError,
-			Body: &httpApp.GlobalError{Message: err.Error()},
+			Body: &dto.TaskControlError{Message: err.Error()},
 		}
 	}
 
@@ -74,7 +73,7 @@ func (c *ResumeTask) Handle(r *rest.Request) *rest.Response {
 	if !exists {
 		return &rest.Response{
 			Code: http.StatusBadRequest,
-			Body: &httpApp.GlobalError{Message: "task name is required"},
+			Body: &dto.TaskControlError{Message: "task name is required"},
 		}
 	}
 
@@ -82,7 +81,7 @@ func (c *ResumeTask) Handle(r *rest.Request) *rest.Response {
 	if err := c.scheduler.ResumeTask(ctx, taskName); err != nil {
 		return &rest.Response{
 			Code: http.StatusInternalServerError,
-			Body: &httpApp.GlobalError{Message: err.Error()},
+			Body: &dto.TaskControlError{Message: err.Error()},
 		}
 	}
 
@@ -107,7 +106,7 @@ func (c *DisableTask) Handle(r *rest.Request) *rest.Response {
 	if !exists {
 		return &rest.Response{
 			Code: http.StatusBadRequest,
-			Body: &httpApp.GlobalError{Message: "task name is required"},
+			Body: &dto.TaskControlError{Message: "task name is required"},
 		}
 	}
 
@@ -126,7 +125,7 @@ func (c *DisableTask) Handle(r *rest.Request) *rest.Response {
 	if err := c.scheduler.DisableTask(ctx, taskName, dt.Reason); err != nil {
 		return &rest.Response{
 			Code: http.StatusInternalServerError,
-			Body: &httpApp.GlobalError{Message: err.Error()},
+			Body: &dto.TaskControlError{Message: err.Error()},
 		}
 	}
 
@@ -152,7 +151,7 @@ func (c *EnableTask) Handle(r *rest.Request) *rest.Response {
 	if !exists {
 		return &rest.Response{
 			Code: http.StatusBadRequest,
-			Body: &httpApp.GlobalError{Message: "task name is required"},
+			Body: &dto.TaskControlError{Message: "task name is required"},
 		}
 	}
 
@@ -160,7 +159,7 @@ func (c *EnableTask) Handle(r *rest.Request) *rest.Response {
 	if err := c.scheduler.EnableTask(ctx, taskName); err != nil {
 		return &rest.Response{
 			Code: http.StatusInternalServerError,
-			Body: &httpApp.GlobalError{Message: err.Error()},
+			Body: &dto.TaskControlError{Message: err.Error()},
 		}
 	}
 

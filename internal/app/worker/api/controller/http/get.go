@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
 	"github.com/ensoria/projecttemplate/internal/app/worker/api/dto"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/worker/pkg/worker"
@@ -43,7 +42,7 @@ func (c *JobStatus) Handle(r *rest.Request) *rest.Response {
 	if !exists {
 		return &rest.Response{
 			Code: http.StatusBadRequest,
-			Body: &httpApp.GlobalError{Message: "job id is required"},
+			Body: &dto.JobControlError{Message: "job id is required"},
 		}
 	}
 
@@ -52,7 +51,7 @@ func (c *JobStatus) Handle(r *rest.Request) *rest.Response {
 	if err != nil {
 		return &rest.Response{
 			Code: http.StatusNotFound,
-			Body: &httpApp.GlobalError{Message: fmt.Sprintf("job not found: %s", err.Error())},
+			Body: &dto.JobControlError{Message: fmt.Sprintf("job not found: %s", err.Error())},
 		}
 	}
 

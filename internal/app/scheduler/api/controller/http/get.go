@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
+	"github.com/ensoria/projecttemplate/internal/app/scheduler/api/controller/dto"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/scheduler/pkg/scheduler"
 )
@@ -24,7 +24,7 @@ func (c *ListTasks) Handle(r *rest.Request) *rest.Response {
 	if err != nil {
 		return &rest.Response{
 			Code: http.StatusInternalServerError,
-			Body: &httpApp.GlobalError{Message: err.Error()},
+			Body: &dto.TaskControlError{Message: err.Error()},
 		}
 	}
 	return &rest.Response{
@@ -48,7 +48,7 @@ func (c *GetStatus) Handle(r *rest.Request) *rest.Response {
 	if !exists {
 		return &rest.Response{
 			Code: http.StatusBadRequest,
-			Body: &httpApp.GlobalError{Message: "task name is required"},
+			Body: &dto.TaskControlError{Message: "task name is required"},
 		}
 	}
 
@@ -57,7 +57,7 @@ func (c *GetStatus) Handle(r *rest.Request) *rest.Response {
 	if err != nil {
 		return &rest.Response{
 			Code: http.StatusNotFound,
-			Body: &httpApp.GlobalError{Message: err.Error()},
+			Body: &dto.TaskControlError{Message: err.Error()},
 		}
 	}
 

@@ -11,3 +11,7 @@ type PauseTask struct {
 type DisableTask struct {
 	Reason string `json:"reason"`
 }
+
+type TaskControlError struct {
+	Message string `json:"message"`
+}

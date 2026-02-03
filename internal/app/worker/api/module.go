@@ -35,7 +35,20 @@ func NewCancelJobModule(cancel *http.CancelJob) *rest.Module {
 	}
 }
 
-// TODO: GET /_/dead-letter-jobs
+func NewListDeadLetterJobsModule(list *http.ListDeadLetterJobs) *rest.Module {
+	return &rest.Module{
+		Path: "/_/dead-letter-jobs",
+		Get:  list,
+	}
+}
+
+func NewGetDeadLetterJobModule(get *http.GetDeadLetterJobs) *rest.Module {
+	return &rest.Module{
+		Path: "/_/dead-letter-jobs/{id}",
+		Get:  get,
+	}
+}
+
 // TODO: POST /_/dead-letter-jobs/{id}/retry"
 // TODO: POST /_/dead-letter-jobs/retry-by-name
 // TODO: POST /_/dead-letter-jobs/retry-all
@@ -51,6 +64,12 @@ func init() {
 
 		http.NewCancelJob,
 		dikit.AsHTTPModule(NewCancelJobModule),
+
+		http.NewListDeadLetterJobs,
+		dikit.AsHTTPModule(NewListDeadLetterJobsModule),
+
+		http.NewGetDeadLetterJobs,
+		dikit.AsHTTPModule(NewGetDeadLetterJobModule),
 
 		// TODO:
 	})

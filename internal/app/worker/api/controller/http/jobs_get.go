@@ -20,6 +20,7 @@ func NewListJobs(worker *worker.Worker) *ListJobs {
 }
 
 // TODO: workerで一覧機能が未実装のため、workerでの実行完了後に着手
+// TODO: パラメータなどで絞れたり、ソート、ページングができるようにする
 func (c *ListJobs) Handle(r *rest.Request) *rest.Response {
 	return &rest.Response{
 		Code: http.StatusNotFound,

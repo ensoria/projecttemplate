@@ -28,7 +28,12 @@ func NewJobStatusModule(get *http.JobStatus) *rest.Module {
 	}
 }
 
-// TODO: DELETE /_/jobs/{id}
+func NewCancelJobModule(cancel *http.CancelJob) *rest.Module {
+	return &rest.Module{
+		Path:   "/_/jobs/{id}",
+		Delete: cancel,
+	}
+}
 
 // TODO: GET /_/dead-letter-jobs
 // TODO: POST /_/dead-letter-jobs/{id}/retry"
@@ -43,6 +48,9 @@ func init() {
 
 		http.NewJobStatus,
 		dikit.AsHTTPModule(NewJobStatusModule),
+
+		http.NewCancelJob,
+		dikit.AsHTTPModule(NewCancelJobModule),
 
 		// TODO:
 	})

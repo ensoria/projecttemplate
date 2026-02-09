@@ -42,10 +42,14 @@ func NewListDeadLetterJobsModule(list *http.ListDeadLetterJobs) *rest.Module {
 	}
 }
 
-func NewGetDeadLetterJobModule(get *http.GetDeadLetterJobs) *rest.Module {
+func NewGetDeadLetterJobModule(
+	get *http.GetDeadLetterJobs,
+	delete *http.DeleteDeadLetterJob,
+) *rest.Module {
 	return &rest.Module{
-		Path: "/_/dead-letter-jobs/{id}",
-		Get:  get,
+		Path:   "/_/dead-letter-jobs/{id}",
+		Get:    get,
+		Delete: delete,
 	}
 }
 
@@ -63,8 +67,12 @@ func NewRetryDeadLetterJobsByNameModule(retryByName *http.RetryDeadLetterJobsByN
 	}
 }
 
-// TODO: POST /_/dead-letter-jobs/retry-all
-// TODO: DELETE /_/dead-letter-jobs/{id}
+func NewRetryAllDeadLetterJobsModule(retryAll *http.RetryAllDeadLetterJobs) *rest.Module {
+	return &rest.Module{
+		Path: "/_/dead-letter-jobs/retry-all",
+		Post: retryAll,
+	}
+}
 
 func init() {
 	dikit.AppendConstructors([]any{
@@ -81,6 +89,7 @@ func init() {
 		dikit.AsHTTPModule(NewListDeadLetterJobsModule),
 
 		http.NewGetDeadLetterJobs,
+		http.NewDeleteDeadLetterJob,
 		dikit.AsHTTPModule(NewGetDeadLetterJobModule),
 
 		http.NewRetryDeadLetterJob,
@@ -89,6 +98,7 @@ func init() {
 		http.NewRetryDeadLetterJobsByName,
 		dikit.AsHTTPModule(NewRetryDeadLetterJobsByNameModule),
 
-		// TODO:
+		http.NewRetryAllDeadLetterJobs,
+		dikit.AsHTTPModule(NewRetryAllDeadLetterJobsModule),
 	})
 }

@@ -2,13 +2,21 @@ package dto
 
 import "github.com/ensoria/worker/pkg/job"
 
+// Request
+
+type RetryByName struct {
+	JobName string `json:"jobName"`
+}
+
+// Response
+
 type JobStatus struct {
-	Id     string `json:"job_id"`
+	Id     string `json:"jobId"`
 	Status string `json:"status"`
 }
 
 type JobCancelled struct {
-	Id string `json:"job_id"`
+	Id string `json:"jobId"`
 }
 
 type JobControlError struct {
@@ -21,11 +29,11 @@ type DeadLetterJobList struct {
 }
 
 type DeadLetterJobRetry struct {
-	Id         string `json:"job_id"`
+	Id         string `json:"jobId"`
 	Message    string `json:"message"`
-	RetryCount int    `json:"retried_count,omitempty"`
+	RetryCount int    `json:"retriedCount,omitempty"`
 }
 
-type RetryByName struct {
-	JobName string `json:"job_name"`
+type DeadLetterJobDeleted struct {
+	Id string `json:"jobId"`
 }

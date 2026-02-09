@@ -27,9 +27,23 @@ func (c *ListTasks) Handle(r *rest.Request) *rest.Response {
 			Body: &dto.TaskControlError{Message: err.Error()},
 		}
 	}
+
+	// 元のcontrol.TaskStateはsnake_caseなのでdtoにマッピングする
+	respBody := make([]dto.TaskStateResponse, 0, len(statuses))
+	for _, state := range statuses {
+		respBody = append(respBody, dto.TaskStateResponse{
+			TaskName:   state.TaskName,
+			Status:     string(state.Status),
+			PausedAt:   state.PausedAt,
+			DisabledAt: state.DisabledAt,
+			Reason:     state.Reason,
+			UpdatedAt:  state.UpdatedAt,
+		})
+	}
+
 	return &rest.Response{
 		Code: http.StatusOK,
-		Body: statuses,
+		Body: respBody,
 	}
 }
 
@@ -61,8 +75,18 @@ func (c *GetStatus) Handle(r *rest.Request) *rest.Response {
 		}
 	}
 
+	// 元のcontrol.TaskStateはsnake_caseなのでdtoにマッピングする
+	respBody := &dto.TaskStateResponse{
+		TaskName:   state.TaskName,
+		Status:     string(state.Status),
+		PausedAt:   state.PausedAt,
+		DisabledAt: state.DisabledAt,
+		Reason:     state.Reason,
+		UpdatedAt:  state.UpdatedAt,
+	}
+
 	return &rest.Response{
 		Code: http.StatusOK,
-		Body: state,
+		Body: respBody,
 	}
 }

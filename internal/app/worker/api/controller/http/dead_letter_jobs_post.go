@@ -59,7 +59,7 @@ func NewRetryDeadLetterJobsByName(worker *worker.Worker) *RetryDeadLetterJobsByN
 func (c *RetryDeadLetterJobsByName) Handle(r *rest.Request) *rest.Response {
 	reqBody, msgs := vkit.RestRequestBody[dto.RetryByName](
 		r,
-		&rule.RuleSet{Field: "job_name", Rules: []rule.Rule{vkit.Required()}},
+		&rule.RuleSet{Field: "jobName", Rules: []rule.Rule{vkit.Required()}},
 	)
 	if msgs != nil {
 		return &rest.Response{
@@ -82,6 +82,35 @@ func (c *RetryDeadLetterJobsByName) Handle(r *rest.Request) *rest.Response {
 		Body: &dto.DeadLetterJobRetry{
 			Id:         reqBody.JobName,
 			Message:    "jobs retried successfully",
+			RetryCount: count,
+		},
+	}
+}
+
+type RetryAllDeadLetterJobs struct {
+	worker *worker.Worker
+}
+
+func NewRetryAllDeadLetterJobs(worker *worker.Worker) *RetryAllDeadLetterJobs {
+	return &RetryAllDeadLetterJobs{
+		worker: worker,
+	}
+}
+
+func (c *RetryAllDeadLetterJobs) Handle(r *rest.Request) *rest.Response {
+	ctx := r.Context()
+	count, err := c.worker.RetryAllDeadLetterJobs(ctx)
+	if err != nil {
+		return &rest.Response{
+			Code: http.StatusInternalServerError,
+			Body: &dto.JobControlError{Message: err.Error()},
+		}
+	}
+
+	return &rest.Response{
+		Code: http.StatusOK,
+		Body: &dto.DeadLetterJobRetry{
+			Message:    "all jobs retried successfully",
 			RetryCount: count,
 		},
 	}

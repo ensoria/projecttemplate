@@ -30,6 +30,7 @@ func Start(envVal *string) {
 		mbApp.NewSubscribe,
 		mbApp.NewPublish,
 		dikit.InjectWithTags(workerApp.NewWorker, ``, `name:"workerCache"`, ``, `group:"worker_jobs"`),
+		workerApp.NewEnqueuer,
 
 		// scheduler
 		// タグ名の付いたキャッシュクライアントを注入

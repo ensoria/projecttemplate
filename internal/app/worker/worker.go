@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	_ "github.com/ensoria/projecttemplate/internal/app/worker/api"
 	appJob "github.com/ensoria/projecttemplate/internal/app/worker/job"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/worker/pkg/database"
@@ -19,7 +20,7 @@ func NewWorker(
 	cacheClient *goredis.Client,
 	dbClient database.DatabaseClient,
 	jobs []*appJob.JobHandler,
-) worker.Enqueuer {
+) *worker.Worker {
 
 	qStorage := queue.NewRedisQueue(cacheClient)
 	historyRepo := history.NewRepository(dbClient)
@@ -54,6 +55,12 @@ func NewWorker(
 
 	return w
 
+}
+
+// NewEnqueuer は *worker.Worker を worker.Enqueuer として提供する変換関数。
+// サービス層など、Enqueue機能のみ必要な箇所で使用される。
+func NewEnqueuer(w *worker.Worker) worker.Enqueuer {
+	return w
 }
 
 func InjectWorkerJobs(f any) any {

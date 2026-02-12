@@ -25,7 +25,11 @@ type UserService interface {
 // gRPCクライアントが必要な場合は、クライアントの型を指定する
 // order serviceについては、すでにorderのモジュールでAsされているので、
 // このmoduleの`init`でAsする必要はなく、dikitが自動的に解決してくれる
-func NewUserService(postClient pbPost.PostClient, orderService order.OrderService, jobQueue worker.Enqueuer) UserService {
+func NewUserService(
+	postClient pbPost.PostClient,
+	orderService order.OrderService,
+	jobQueue worker.Enqueuer,
+) UserService {
 	return &UserServiceImpl{
 		postClient:   postClient,
 		orderService: orderService,

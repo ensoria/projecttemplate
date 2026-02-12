@@ -34,6 +34,7 @@ func Run(envVal *string) {
 
 		// worker
 		workerApp.InjectWorkerJobs(workerApp.NewWorker),
+		workerApp.NewEnqueuer,
 	})
 
 	dikit.AppendInvocations([]any{

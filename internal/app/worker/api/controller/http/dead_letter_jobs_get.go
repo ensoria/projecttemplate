@@ -43,8 +43,8 @@ type GetDeadLetterJobs struct {
 	worker *worker.Worker
 }
 
-func NewGetDeadLetterJobs(worker *worker.Worker) *ListDeadLetterJobs {
-	return &ListDeadLetterJobs{
+func NewGetDeadLetterJobs(worker *worker.Worker) *GetDeadLetterJobs {
+	return &GetDeadLetterJobs{
 		worker: worker,
 	}
 }

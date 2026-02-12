@@ -2,14 +2,6 @@ package dto
 
 import "github.com/ensoria/worker/pkg/job"
 
-// Request
-
-type RetryByName struct {
-	JobName string `json:"jobName"`
-}
-
-// Response
-
 type JobStatus struct {
 	Id     string `json:"jobId"`
 	Status string `json:"status"`

@@ -13,10 +13,6 @@ func main() {
 	envVal := pflag.StringP("env", "e", "local", "it must be either [local], [develop], [staging], [production] or [testing].")
 	pflag.Parse()
 
-	if envVal == nil {
-		log.Fatal("Please specify the environment with -e option. It must be either [local], [develop], [staging], [production] or [testing].")
-	}
-
 	if err := server.Run(envVal); err != nil {
 		log.Fatal(err)
 	}

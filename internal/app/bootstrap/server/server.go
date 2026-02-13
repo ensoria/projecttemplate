@@ -43,6 +43,6 @@ func Run(envVal *string) {
 		grpcApp.InjectGRPCServices(grpcApp.NewGRPCApp(envVal)),
 	})
 
-	// TODO: 最後の引数の、putputFxLogは、環境変数で変えれるようにする
+	// TODO: 最後の引数の、putputFxLogは、configのlog levelで変えれるようにする
 	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), true)
 }

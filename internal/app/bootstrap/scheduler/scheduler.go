@@ -5,7 +5,9 @@ import (
 	"github.com/ensoria/projecttemplate/internal/infra/cache"
 	"github.com/ensoria/projecttemplate/internal/infra/db"
 	"github.com/ensoria/projecttemplate/internal/infra/mb"
+	"github.com/ensoria/websocket/pkg/wsrouter"
 
+	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
 	mbApp "github.com/ensoria/projecttemplate/internal/app/mb"
 	schedulerApp "github.com/ensoria/projecttemplate/internal/app/scheduler"
 	workerApp "github.com/ensoria/projecttemplate/internal/app/worker"
@@ -35,14 +37,22 @@ func Start(envVal *string) {
 		// scheduler
 		// タグ名の付いたキャッシュクライアントを注入
 		dikit.InjectWithTags(schedulerApp.NewScheduler, `name:"schedulerCache"`, ``),
-		// TODO: httpサーバーは必要だが、scheduler管理用のエンドポイントのみにする
 
+		// scheduler管理用のエンドポイントのみ
+		httpApp.InjectHTTPModules(httpApp.CreateHTTPPipeline),
+		NewEmptyWSRouter,
 	})
 
 	dikit.AppendInvocations([]any{
 		schedulerApp.InjectScheduledTasks(schedulerApp.NewSchedulerApp),
+		httpApp.NewHTTPApp(envVal),
 	})
 
-	// TODO: putputFxLogは、環境変数で変えれるようにする
+	// TODO: putputFxLogは、configのlog levelで変えれるようにする
 	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), true)
+}
+
+// schedulerではwsrouterは使わないが、HTTPパイプラインの初期化で必要になるため、空のrouterを提供する
+func NewEmptyWSRouter() *wsrouter.Router {
+	return &wsrouter.Router{}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	_ "github.com/ensoria/projecttemplate/internal/app/scheduler/api"
 	"github.com/ensoria/projecttemplate/internal/app/scheduler/task"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
@@ -44,14 +45,11 @@ func NewScheduler(
 }
 
 func NewSchedulerApp(lc dikit.LC, s *scheduler.Scheduler, tasks []*task.ScheduledTask) error {
-	// TODO: httpサーバーの起動も必要そう
-
 	RegisterTasks(s, tasks)
 
 	// REFACTOR: RegisterSchedulerLifeCycle()関数に移動
 	lc.Append(dikit.Hook{
 		OnStart: func(ctx context.Context) error {
-			// TODO: httpサーバーも一緒にlifecycleで管理する?それとも分けるか?
 			fmt.Println("Starting scheduler...")
 			// OnStartのctxは起動フェーズ用なので、OnStart が完了すると（あるいはタイムアウトすると）キャンセルされる
 			// スケジューラーのような長時間実行するサービスには、独立した context.Background() を渡す必要がある
@@ -62,8 +60,6 @@ func NewSchedulerApp(lc dikit.LC, s *scheduler.Scheduler, tasks []*task.Schedule
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			// TODO: httpサーバーも一緒にlifecycleで管理する?それとも分けるか?
-
 			// シャットダウンcontextは、ctxを使う
 			if err := s.Shutdown(ctx); err != nil {
 				return fmt.Errorf("scheduler shutdown error: %v", err)

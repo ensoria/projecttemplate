@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/ensoria/config/pkg/registry"
 	grpcApp "github.com/ensoria/projecttemplate/internal/app/grpc"
 	httpApp "github.com/ensoria/projecttemplate/internal/app/http"
@@ -16,7 +18,7 @@ import (
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 )
 
-func Run(envVal *string) {
+func Run(envVal *string) error {
 	registry.InitializeConfiguration(envVal, "./internal", "config")
 
 	dikit.AppendConstructors([]any{
@@ -43,6 +45,13 @@ func Run(envVal *string) {
 		grpcApp.InjectGRPCServices(grpcApp.NewGRPCApp(envVal)),
 	})
 
-	// TODO: 最後の引数の、putputFxLogは、configのlog levelで変えれるようにする
-	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), true)
+	params, err := registry.ModuleParams("default")
+	if err != nil {
+		return fmt.Errorf("app initialization error: %w", err)
+	}
+	outputFxLog := params.Log.Level == "debug"
+
+	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), outputFxLog)
+
+	return nil
 }

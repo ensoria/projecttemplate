@@ -1,6 +1,8 @@
 package scheduler
 
 import (
+	"fmt"
+
 	"github.com/ensoria/config/pkg/registry"
 	"github.com/ensoria/projecttemplate/internal/infra/cache"
 	"github.com/ensoria/projecttemplate/internal/infra/db"
@@ -15,7 +17,7 @@ import (
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
 )
 
-func Start(envVal *string) {
+func Start(envVal *string) error {
 	registry.InitializeConfiguration(envVal, "./internal", "config")
 
 	dikit.AppendConstructors([]any{
@@ -48,8 +50,15 @@ func Start(envVal *string) {
 		httpApp.NewHTTPApp(envVal),
 	})
 
-	// TODO: putputFxLogは、configのlog levelで変えれるようにする
-	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), true)
+	params, err := registry.ModuleParams("default")
+	if err != nil {
+		return fmt.Errorf("app initialization error: %w", err)
+	}
+	outputFxLog := params.Log.Level == "debug"
+
+	dikit.ProvideAndRun(dikit.Constructors(), dikit.Invocations(), outputFxLog)
+
+	return nil
 }
 
 // schedulerではwsrouterは使わないが、HTTPパイプラインの初期化で必要になるため、空のrouterを提供する

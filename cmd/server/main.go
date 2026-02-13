@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/ensoria/projecttemplate/internal/app/bootstrap/server"
 	"github.com/spf13/pflag"
 )
@@ -12,8 +14,10 @@ func main() {
 	pflag.Parse()
 
 	if envVal == nil {
-		panic("Please specify the environment with -e option. It must be either [local], [develop], [staging], [production] or [testing].")
+		log.Fatal("Please specify the environment with -e option. It must be either [local], [develop], [staging], [production] or [testing].")
 	}
 
-	server.Run(envVal)
+	if err := server.Run(envVal); err != nil {
+		log.Fatal(err)
+	}
 }

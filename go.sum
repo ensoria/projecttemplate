@@ -43,6 +43,10 @@ github.com/ensoria/grpcgear v0.0.2 h1:H+pHFvh/XUjzfPkZCL/7xCwq/D4+EHjppxSwZe/Tgx
 github.com/ensoria/grpcgear v0.0.2/go.mod h1:rzgokms02Liaj02tNeMRGoKf7FD7qMqg6qQuylL1/WM=
 github.com/ensoria/mb v0.0.1 h1:rWHB5nAT3VzCtCHqY2f0TC+1s5JwoXVR8sWXEit8A8I=
 github.com/ensoria/mb v0.0.1/go.mod h1:VYF5v5rPyC2eG0PHWkWECNBRRUPcm3b3me7/QxEJ/Xo=
+github.com/ensoria/mb v0.0.2 h1:exbDtXwshbzYGXeVcnioWEH4ia5tUacLH1+2u14EdBk=
+github.com/ensoria/mb v0.0.2/go.mod h1:VYF5v5rPyC2eG0PHWkWECNBRRUPcm3b3me7/QxEJ/Xo=
+github.com/ensoria/mb v0.0.3 h1:g7sqdCoObekjTpz4sn9plMHdSnCOLR9vma3302BEFPY=
+github.com/ensoria/mb v0.0.3/go.mod h1:VYF5v5rPyC2eG0PHWkWECNBRRUPcm3b3me7/QxEJ/Xo=
 github.com/ensoria/rest v0.0.13 h1:9cmzzV2sfCMYqn9fWp4INJIvSLSyrANVz3IDQ4ib53k=
 github.com/ensoria/rest v0.0.13/go.mod h1:Ss1UsDCzO1DVHT41SvKZ7tnrUeZzl7WzZ6623MDR7y0=
 github.com/ensoria/rest v0.0.14 h1:c16JJtquX8YpgmRzFSoSA98QnBdjhj89nlgSLPkhdA4=

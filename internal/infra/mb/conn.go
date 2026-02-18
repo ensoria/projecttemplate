@@ -50,11 +50,19 @@ func NewSubscriberConnection(envVal *string) func(lc dikit.LC) (enmb.Subscriber,
 			enmb.WithPanicHandler(&SubscriberPanicHandler{}),
 		)
 
-		onStop := func(ctx context.Context) error {
-			slog.Info("Shutting down MB subscriber")
-			return subConn.Close()
-		}
-		dikit.RegisterOnStopLifecycle(lc, onStop)
+		lc.Append(dikit.Hook{
+			OnStart: func(ctx context.Context) error {
+				if err := subConn.Ping(ctx); err != nil {
+					return fmt.Errorf("MB subscriber connection check failed: %w", err)
+				}
+				slog.Info("MB subscriber connection verified")
+				return nil
+			},
+			OnStop: func(ctx context.Context) error {
+				slog.Info("Shutting down MB subscriber")
+				return subConn.Close()
+			},
+		})
 
 		return subConn, nil
 	}
@@ -79,11 +87,19 @@ func NewPublisherConnection(envVal *string) func(lc dikit.LC) (enmb.Publisher, e
 
 		pubConn.SetOptions(enmb.WithPublishLogger(logkit.Logger()))
 
-		onStop := func(ctx context.Context) error {
-			logkit.Info("Shutting down MB publisher")
-			return pubConn.Close()
-		}
-		dikit.RegisterOnStopLifecycle(lc, onStop)
+		lc.Append(dikit.Hook{
+			OnStart: func(ctx context.Context) error {
+				if err := pubConn.Ping(ctx); err != nil {
+					return fmt.Errorf("MB publisher connection check failed: %w", err)
+				}
+				logkit.Info("MB publisher connection verified")
+				return nil
+			},
+			OnStop: func(ctx context.Context) error {
+				logkit.Info("Shutting down MB publisher")
+				return pubConn.Close()
+			},
+		})
 
 		return pubConn, nil
 	}

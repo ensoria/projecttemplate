@@ -52,6 +52,9 @@ func NewSubscriberConnection(envVal *string) func(lc dikit.LC) (enmb.Subscriber,
 
 		lc.Append(dikit.Hook{
 			OnStart: func(ctx context.Context) error {
+				if err := subConn.Connect(ctx); err != nil {
+					return fmt.Errorf("MB subscriber connection failed: %w", err)
+				}
 				if err := subConn.Ping(ctx); err != nil {
 					return fmt.Errorf("MB subscriber connection check failed: %w", err)
 				}
@@ -89,6 +92,9 @@ func NewPublisherConnection(envVal *string) func(lc dikit.LC) (enmb.Publisher, e
 
 		lc.Append(dikit.Hook{
 			OnStart: func(ctx context.Context) error {
+				if err := pubConn.Connect(ctx); err != nil {
+					return fmt.Errorf("MB publisher connection failed: %w", err)
+				}
 				if err := pubConn.Ping(ctx); err != nil {
 					return fmt.Errorf("MB publisher connection check failed: %w", err)
 				}

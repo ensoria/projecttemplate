@@ -50,7 +50,7 @@ func NewSchedulerApp(lc dikit.LC, s *scheduler.Scheduler, tasks []*task.Schedule
 	// REFACTOR: RegisterSchedulerLifeCycle()関数に移動
 	lc.Append(dikit.Hook{
 		OnStart: func(ctx context.Context) error {
-			fmt.Println("Starting scheduler...")
+			logkit.Info("Starting scheduler...")
 			// OnStartのctxは起動フェーズ用なので、OnStart が完了すると（あるいはタイムアウトすると）キャンセルされる
 			// スケジューラーのような長時間実行するサービスには、独立した context.Background() を渡す必要がある
 			// これにより、OnStartが完了してもスケジューラーは動き続ける

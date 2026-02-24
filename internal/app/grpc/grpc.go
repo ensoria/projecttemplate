@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 	"net"
 
 	"github.com/ensoria/config/pkg/env"
@@ -72,24 +72,34 @@ func RegisterGRPCServerLifecycle(lc dikit.LC, grpcSrv *ggrpc.Server) {
 
 	lc.Append(dikit.Hook{
 		OnStart: func(ctx context.Context) error {
+			// TODO: ポートを設定可能にする
+			listen, err := net.Listen("tcp", ":50051")
+			if err != nil {
+				return fmt.Errorf("gRPC server failed to listen: %w", err)
+			}
 			go func() {
-				// TODO: ポートを設定可能にする
-				listen, err := net.Listen("tcp", ":50051")
-				if err != nil {
-					slog.Error("gRPC server failed to listen", "error", err)
-					return
-				}
-				slog.Info("gRPC server starting", "addr", ":50051")
+				logkit.Info("gRPC server starting", "addr", ":50051")
 				if err := grpcSrv.Serve(listen); err != nil {
-					slog.Error("gRPC server failed to start", "error", err)
+					// TODO: ここではエラーを返さないほうがいいのか?
+					logkit.Error("gRPC server stopped", "error", err)
 				}
 			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			slog.Info("Shutting down gRPC server")
-			grpcSrv.GracefulStop()
-			return nil
+			logkit.Info("Shutting down gRPC server")
+			done := make(chan struct{})
+			go func() {
+				grpcSrv.GracefulStop()
+				close(done)
+			}()
+			select {
+			case <-done:
+				return nil
+			case <-ctx.Done():
+				grpcSrv.Stop() // 強制停止
+				return nil
+			}
 		},
 	})
 }

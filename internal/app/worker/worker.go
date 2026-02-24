@@ -2,11 +2,11 @@ package worker
 
 import (
 	"context"
-	"log/slog"
 
 	_ "github.com/ensoria/projecttemplate/internal/app/worker/api"
 	appJob "github.com/ensoria/projecttemplate/internal/app/worker/job"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/ensoria/worker/pkg/database"
 	"github.com/ensoria/worker/pkg/history"
 	"github.com/ensoria/worker/pkg/queue"
@@ -41,13 +41,13 @@ func NewWorker(
 		OnStart: func(ctx context.Context) error {
 			workerCtx, workerCancel = context.WithCancel(context.Background())
 			go func() {
-				slog.Info("Starting worker...")
+				logkit.Info("Starting worker...")
 				w.Start(workerCtx)
 			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			slog.Info("Stopping worker...")
+			logkit.Info("Stopping worker...")
 			workerCancel()
 			return w.Shutdown(ctx)
 		},

@@ -3,7 +3,6 @@ package mb
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	enmb "github.com/ensoria/mb/pkg/mb"
 	"github.com/ensoria/mb/pkg/mq"
@@ -58,11 +57,11 @@ func NewSubscriberConnection(envVal *string) func(lc dikit.LC) (enmb.Subscriber,
 				if err := subConn.Ping(ctx); err != nil {
 					return fmt.Errorf("MB subscriber connection check failed: %w", err)
 				}
-				slog.Info("MB subscriber connection verified")
+				logkit.Info("MB subscriber connection verified")
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
-				slog.Info("Shutting down MB subscriber")
+				logkit.Info("Shutting down MB subscriber")
 				return subConn.Close()
 			},
 		})

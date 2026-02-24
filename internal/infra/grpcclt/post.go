@@ -47,10 +47,14 @@ func NewUserPostConnection(lc dikit.LC) (grpc.ClientConnInterface, error) {
 		return nil, err
 	}
 
-	onStop := func(ctx context.Context) error {
-		return conn.Close()
-	}
-	dikit.RegisterOnStopLifecycle(lc, onStop)
+	lc.Append(dikit.Hook{
+		OnStart: func(ctx context.Context) error {
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			return conn.Close()
+		},
+	})
 
 	return conn, nil
 }

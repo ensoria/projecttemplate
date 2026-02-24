@@ -2,8 +2,10 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
+	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	schedulerDB "github.com/ensoria/scheduler/pkg/database"
 	workerDB "github.com/ensoria/worker/pkg/database"
 )
@@ -11,6 +13,7 @@ import (
 // DatabaseClient is a common interface for database clients.
 type DatabaseClient interface {
 	Close() error
+	Ping(ctx context.Context) error
 }
 
 // DatabaseConfig is a common interface for database configurations.
@@ -39,9 +42,14 @@ func NewDefaultDBClient[C DatabaseConfig, T DatabaseClient](
 
 		lc.Append(dikit.Hook{
 			OnStart: func(ctx context.Context) error {
+				if err := client.Ping(ctx); err != nil {
+					return fmt.Errorf("DB connection check failed (%s): %w", dbType, err)
+				}
+				logkit.Info("DB connection verified", "type", dbType)
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
+				logkit.Info("Shutting down DB connection", "type", dbType)
 				return client.Close()
 			},
 		})

@@ -78,15 +78,15 @@ func RegisterHTTPServerLifecycle(lc dikit.LC, srv *http.Server) {
 	lc.Append(dikit.Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
-				slog.Info("HTTP server starting", "addr", srv.Addr)
+				logkit.Info("HTTP server starting", "addr", srv.Addr)
 				if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-					slog.Error("HTTP server ListenAndServe error", "error", err)
+					logkit.Error("HTTP server ListenAndServe error", "error", err)
 				}
 			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			slog.Info("Shutting down HTTP server")
+			logkit.Info("Shutting down HTTP server")
 			return srv.Shutdown(ctx)
 		},
 	})

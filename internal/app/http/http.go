@@ -19,8 +19,8 @@ import (
 )
 
 // HTTPサーバーの初期化
-func NewHTTPApp(envVal *string) func(lc dikit.LC, httpPipeline *pipeline.HTTP, wsRouter *wsrouter.Router) *http.Server {
-	return func(lc dikit.LC, httpPipeline *pipeline.HTTP, wsRouter *wsrouter.Router) *http.Server {
+func NewHTTPApp(envVal *string) func(lc dikit.LC, shutdowner dikit.Shutdowner, httpPipeline *pipeline.HTTP, wsRouter *wsrouter.Router) *http.Server {
+	return func(lc dikit.LC, shutdowner dikit.Shutdowner, httpPipeline *pipeline.HTTP, wsRouter *wsrouter.Router) *http.Server {
 		httpPipeline.Register()
 		wsRouter.Register()
 
@@ -36,7 +36,7 @@ func NewHTTPApp(envVal *string) func(lc dikit.LC, httpPipeline *pipeline.HTTP, w
 			Addr: fmt.Sprintf(":%d", params.Server.Port),
 		}
 
-		RegisterHTTPServerLifecycle(lc, httpSrv)
+		RegisterHTTPServerLifecycle(lc, shutdowner, httpSrv)
 		return httpSrv
 	}
 }
@@ -74,13 +74,14 @@ func CreateHTTPPipeline(modules []*rest.Module) *pipeline.HTTP {
 }
 
 // HTTP/WebSocket controllers lifecycle registration
-func RegisterHTTPServerLifecycle(lc dikit.LC, srv *http.Server) {
+func RegisterHTTPServerLifecycle(lc dikit.LC, shutdowner dikit.Shutdowner, srv *http.Server) {
 	lc.Append(dikit.Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
 				logkit.Info("HTTP server starting", "addr", srv.Addr)
 				if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-					logkit.Error("HTTP server ListenAndServe error", "error", err)
+					logkit.Error("HTTP server stopped unexpectedly", "error", err)
+					_ = shutdowner.Shutdown()
 				}
 			}()
 			return nil

@@ -17,8 +17,8 @@ import (
 )
 
 // gRPCサーバーの初期化
-func NewGRPCApp(envVal *string) func(lc dikit.LC, grpcServices []dikit.GRPCServiceRegistrar) *ggrpc.Server {
-	return func(lc dikit.LC, grpcServices []dikit.GRPCServiceRegistrar) *ggrpc.Server {
+func NewGRPCApp(envVal *string) func(lc dikit.LC, shutdowner dikit.Shutdowner, grpcServices []dikit.GRPCServiceRegistrar) *ggrpc.Server {
+	return func(lc dikit.LC, shutdowner dikit.Shutdowner, grpcServices []dikit.GRPCServiceRegistrar) *ggrpc.Server {
 		// ログとpanicリカバリinterceptor付きのgRPCサーバーを作成
 		grpcSrv := NewGRPCServer(logkit.Logger())
 
@@ -29,7 +29,7 @@ func NewGRPCApp(envVal *string) func(lc dikit.LC, grpcServices []dikit.GRPCServi
 			logkit.Info("gRPC reflection enabled for development environment", "env", *envVal)
 		}
 
-		RegisterGRPCServerLifecycle(lc, grpcSrv)
+		RegisterGRPCServerLifecycle(lc, shutdowner, grpcSrv)
 
 		for _, svc := range grpcServices {
 			svc.RegisterWithServer(grpcSrv)
@@ -65,7 +65,7 @@ func NewGRPCServer(logger logging.Logger) *ggrpc.Server {
 }
 
 // gRPC server lifecycle registration
-func RegisterGRPCServerLifecycle(lc dikit.LC, grpcSrv *ggrpc.Server) {
+func RegisterGRPCServerLifecycle(lc dikit.LC, shutdowner dikit.Shutdowner, grpcSrv *ggrpc.Server) {
 	if grpcSrv == nil {
 		return
 	}
@@ -80,8 +80,8 @@ func RegisterGRPCServerLifecycle(lc dikit.LC, grpcSrv *ggrpc.Server) {
 			go func() {
 				logkit.Info("gRPC server starting", "addr", ":50051")
 				if err := grpcSrv.Serve(listen); err != nil {
-					// TODO: ここではエラーを返さないほうがいいのか?
-					logkit.Error("gRPC server stopped", "error", err)
+					logkit.Error("gRPC server stopped unexpectedly", "error", err)
+					_ = shutdowner.Shutdown()
 				}
 			}()
 			return nil
@@ -107,6 +107,6 @@ func RegisterGRPCServerLifecycle(lc dikit.LC, grpcSrv *ggrpc.Server) {
 func InjectGRPCServices(f any) any {
 	return fx.Annotate(
 		f,
-		fx.ParamTags(``, dikit.GroupTagGRPCServices),
+		fx.ParamTags(``, ``, dikit.GroupTagGRPCServices),
 	)
 }

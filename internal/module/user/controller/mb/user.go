@@ -1,8 +1,8 @@
 package mb
 
 import (
+	"github.com/ensoria/loggear/pkg/loggear"
 	"github.com/ensoria/projecttemplate/internal/module/user/service"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 )
 
 type UserSubscriber struct {
@@ -16,7 +16,7 @@ func NewUserSubscriber(us service.UserService) *UserSubscriber {
 }
 
 func (h *UserSubscriber) OnReceive(data []byte, metadata map[string]string) error {
-	logkit.Info("📨 Received message",
+	loggear.Info("📨 Received message",
 		"topic", metadata["topic"],
 		"partition", metadata["partition"],
 		"offset", metadata["offset"],

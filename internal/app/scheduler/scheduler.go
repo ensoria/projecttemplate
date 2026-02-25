@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ensoria/loggear/pkg/loggear"
 	_ "github.com/ensoria/projecttemplate/internal/app/scheduler/api"
 	"github.com/ensoria/projecttemplate/internal/app/scheduler/task"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/ensoria/scheduler/pkg/control"
 	"github.com/ensoria/scheduler/pkg/database"
 	"github.com/ensoria/scheduler/pkg/distributed"
@@ -34,7 +34,7 @@ func NewScheduler(
 	controlRepo := control.NewRedisStateRepository(redisClient, "")
 
 	s := scheduler.New(backend,
-		scheduler.WithLogger(logkit.Logger()),
+		scheduler.WithLogger(loggear.GetLogger()),
 		scheduler.WithRecovery(recoveryRepo),
 		scheduler.WithControl(controlRepo),
 		scheduler.WithHistory(dbClient),
@@ -50,7 +50,7 @@ func NewSchedulerApp(lc dikit.LC, s *scheduler.Scheduler, tasks []*task.Schedule
 	// REFACTOR: RegisterSchedulerLifeCycle()関数に移動
 	lc.Append(dikit.Hook{
 		OnStart: func(ctx context.Context) error {
-			logkit.Info("Starting scheduler...")
+			loggear.Info("Starting scheduler...")
 			// OnStartのctxは起動フェーズ用なので、OnStart が完了すると（あるいはタイムアウトすると）キャンセルされる
 			// スケジューラーのような長時間実行するサービスには、独立した context.Background() を渡す必要がある
 			// これにより、OnStartが完了してもスケジューラーは動き続ける

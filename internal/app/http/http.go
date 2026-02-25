@@ -8,9 +8,9 @@ import (
 	"net/http"
 
 	"github.com/ensoria/config/pkg/registry"
+	"github.com/ensoria/loggear/pkg/loggear"
 	"github.com/ensoria/projecttemplate/internal/app/http/dto"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/ensoria/rest/pkg/mw"
 	"github.com/ensoria/rest/pkg/pipeline"
 	"github.com/ensoria/rest/pkg/rest"
@@ -30,7 +30,7 @@ func NewHTTPApp(envVal *string) func(lc dikit.LC, shutdowner dikit.Shutdowner, h
 			log.Fatalf("default config parameters not found: %s", err)
 		}
 		// FIXME: 別の場所に移す
-		logkit.SetLogLevel(params.Log.Level)
+		loggear.SetLogLevel(params.Log.Level)
 
 		httpSrv := &http.Server{
 			Addr: fmt.Sprintf(":%d", params.Server.Port),
@@ -78,16 +78,16 @@ func RegisterHTTPServerLifecycle(lc dikit.LC, shutdowner dikit.Shutdowner, srv *
 	lc.Append(dikit.Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
-				logkit.Info("HTTP server starting", "addr", srv.Addr)
+				loggear.Info("HTTP server starting", "addr", srv.Addr)
 				if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-					logkit.Error("HTTP server stopped unexpectedly", "error", err)
+					loggear.Error("HTTP server stopped unexpectedly", "error", err)
 					_ = shutdowner.Shutdown()
 				}
 			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			logkit.Info("Shutting down HTTP server")
+			loggear.Info("Shutting down HTTP server")
 			return srv.Shutdown(ctx)
 		},
 	})
@@ -98,7 +98,7 @@ func InjectHTTPModules(f any) any {
 }
 
 func logIncomingRequest(req *rest.Request, res *rest.Response) {
-	logkit.Info("HTTP Request",
+	loggear.Info("HTTP Request",
 		slog.String("method", req.Method()),
 		slog.String("path", req.Path()),
 		slog.Int("status_code", res.Code),
@@ -109,7 +109,7 @@ func logIncomingRequest(req *rest.Request, res *rest.Response) {
 }
 
 func logPanicDetails(r *rest.Request, panicValue interface{}, stackTrace []byte) {
-	logkit.Error("Panic Recovered",
+	loggear.Error("Panic Recovered",
 		slog.String("method", r.Method()),
 		slog.String("url", r.URLStr()),
 		slog.String("remote_addr", r.RemoteAddr()),

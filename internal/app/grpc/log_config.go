@@ -4,8 +4,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ensoria/grpcgear/pkg/interceptor/logging"
 	"github.com/ensoria/grpcgear/pkg/interceptor/logging/logsrv"
+	"github.com/ensoria/loggear/pkg/loggear"
 	"google.golang.org/grpc/codes"
 )
 
@@ -33,7 +33,7 @@ func LogConfig() *logsrv.ServerConfig {
 	return cfg
 }
 
-func CreateBasicUnaryLogFuncs(logger logging.Logger) (logsrv.LogUnarySuccessFunc, logsrv.LogUnaryErrorFunc) {
+func CreateBasicUnaryLogFuncs(logger loggear.Logger) (logsrv.LogUnarySuccessFunc, logsrv.LogUnaryErrorFunc) {
 	build := func(info *logsrv.UnaryInfo) []any {
 		attrs := baseCommonAttrs(info.Code, info.DurationMS, info.Server.FullMethod, info.Client)
 		if info.Err != nil {
@@ -51,7 +51,7 @@ func CreateBasicUnaryLogFuncs(logger logging.Logger) (logsrv.LogUnarySuccessFunc
 	return logSuccess, logError
 }
 
-func CreateBasicStreamLogFuncs(logger logging.Logger) (logsrv.LogStreamSuccessFunc, logsrv.LogStreamErrorFunc) {
+func CreateBasicStreamLogFuncs(logger loggear.Logger) (logsrv.LogStreamSuccessFunc, logsrv.LogStreamErrorFunc) {
 	build := func(info *logsrv.StreamInfo) []any {
 		attrs := baseCommonAttrs(info.Code, info.DurationMS, info.Server.FullMethod, info.Client)
 		// ストリーム特有のフラグ

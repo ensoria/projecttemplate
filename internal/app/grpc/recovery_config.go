@@ -5,11 +5,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ensoria/grpcgear/pkg/interceptor/logging"
 	"github.com/ensoria/grpcgear/pkg/interceptor/recovery/recoverysrv"
+	"github.com/ensoria/loggear/pkg/loggear"
 )
 
-func CreateBasicPanicLogFuncs(logger logging.Logger) (recoverysrv.LogUnaryPanicFunc, recoverysrv.LogStreamPanicFunc) {
+func CreateBasicPanicLogFuncs(logger loggear.Logger) (recoverysrv.LogUnaryPanicFunc, recoverysrv.LogStreamPanicFunc) {
 
 	logUnary := func(info *recoverysrv.UnaryPanicInfo) {
 		attrs := buildPanicLog(

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ensoria/loggear/pkg/loggear"
 	enmb "github.com/ensoria/mb/pkg/mb"
 	"github.com/ensoria/mb/pkg/mq"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 )
 
 // message brokerに関する接続
@@ -15,7 +15,7 @@ import (
 type SubscriberPanicHandler struct{}
 
 func (h *SubscriberPanicHandler) OnPanic(panicValue interface{}, stackTrace []byte, metadata enmb.PanicMetadata) {
-	logkit.Error("Panic Recovered in Subscriber",
+	loggear.Error("Panic Recovered in Subscriber",
 		"target", metadata.Target,
 		"metadata", metadata.Metadata,
 		"data", metadata.Data,
@@ -45,7 +45,7 @@ func NewSubscriberConnection(envVal *string) func(lc dikit.LC) (enmb.Subscriber,
 		}
 
 		subConn.SetOptions(
-			enmb.WithLogger(logkit.Logger()),
+			enmb.WithLogger(loggear.GetLogger()),
 			enmb.WithPanicHandler(&SubscriberPanicHandler{}),
 		)
 
@@ -57,11 +57,11 @@ func NewSubscriberConnection(envVal *string) func(lc dikit.LC) (enmb.Subscriber,
 				if err := subConn.Ping(ctx); err != nil {
 					return fmt.Errorf("MB subscriber connection check failed: %w", err)
 				}
-				logkit.Info("MB subscriber connection verified")
+				loggear.Info("MB subscriber connection verified")
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
-				logkit.Info("Shutting down MB subscriber")
+				loggear.Info("Shutting down MB subscriber")
 				return subConn.Close()
 			},
 		})
@@ -87,7 +87,7 @@ func NewPublisherConnection(envVal *string) func(lc dikit.LC) (enmb.Publisher, e
 			return nil, fmt.Errorf("failed to create publisher: %w", err)
 		}
 
-		pubConn.SetOptions(enmb.WithPublishLogger(logkit.Logger()))
+		pubConn.SetOptions(enmb.WithPublishLogger(loggear.GetLogger()))
 
 		lc.Append(dikit.Hook{
 			OnStart: func(ctx context.Context) error {
@@ -97,11 +97,11 @@ func NewPublisherConnection(envVal *string) func(lc dikit.LC) (enmb.Publisher, e
 				if err := pubConn.Ping(ctx); err != nil {
 					return fmt.Errorf("MB publisher connection check failed: %w", err)
 				}
-				logkit.Info("MB publisher connection verified")
+				loggear.Info("MB publisher connection verified")
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
-				logkit.Info("Shutting down MB publisher")
+				loggear.Info("Shutting down MB publisher")
 				return pubConn.Close()
 			},
 		})

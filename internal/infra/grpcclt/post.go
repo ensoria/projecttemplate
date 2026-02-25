@@ -5,8 +5,8 @@ import (
 
 	"github.com/ensoria/grpcgear/pkg/interceptor/metadata/metaclt"
 	"github.com/ensoria/grpcgear/pkg/interceptor/retry/retryclt"
+	"github.com/ensoria/loggear/pkg/loggear"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -24,7 +24,7 @@ func NewUserPostConnection(lc dikit.LC) (grpc.ClientConnInterface, error) {
 		RequestIdGenerator: func() string {
 			return "req_" + uuid.New().String()
 		},
-		Logger: logkit.Logger(),
+		Logger: loggear.GetLogger(),
 	}
 	retryCofig := retryclt.DefaultConfig()
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ensoria/loggear/pkg/loggear"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	goredis "github.com/redis/go-redis/v9"
 )
 
@@ -23,11 +23,11 @@ func NewDefaultWorkerCacheClient(envVal *string) func(lc dikit.LC) *goredis.Clie
 				if err := client.Ping(ctx).Err(); err != nil {
 					return fmt.Errorf("worker cache connection check failed: %w", err)
 				}
-				logkit.Info("Worker cache connection verified")
+				loggear.Info("Worker cache connection verified")
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
-				logkit.Info("Shutting down worker cache")
+				loggear.Info("Shutting down worker cache")
 				return client.Close()
 			},
 		})
@@ -51,11 +51,11 @@ func NewDefaultSchedulerCacheClient(envVal *string) func(lc dikit.LC) *goredis.C
 				if err := client.Ping(ctx).Err(); err != nil {
 					return fmt.Errorf("scheduler cache connection check failed: %w", err)
 				}
-				logkit.Info("Scheduler cache connection verified")
+				loggear.Info("Scheduler cache connection verified")
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
-				logkit.Info("Shutting down scheduler cache")
+				loggear.Info("Shutting down scheduler cache")
 				return client.Close()
 			},
 		})

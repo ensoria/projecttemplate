@@ -6,11 +6,10 @@ import (
 	"net"
 
 	"github.com/ensoria/config/pkg/env"
-	"github.com/ensoria/grpcgear/pkg/interceptor/logging"
 	"github.com/ensoria/grpcgear/pkg/interceptor/logging/logsrv"
 	"github.com/ensoria/grpcgear/pkg/interceptor/recovery/recoverysrv"
+	"github.com/ensoria/loggear/pkg/loggear"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	"go.uber.org/fx"
 	ggrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -20,13 +19,13 @@ import (
 func NewGRPCApp(envVal *string) func(lc dikit.LC, shutdowner dikit.Shutdowner, grpcServices []dikit.GRPCServiceRegistrar) *ggrpc.Server {
 	return func(lc dikit.LC, shutdowner dikit.Shutdowner, grpcServices []dikit.GRPCServiceRegistrar) *ggrpc.Server {
 		// ログとpanicリカバリinterceptor付きのgRPCサーバーを作成
-		grpcSrv := NewGRPCServer(logkit.Logger())
+		grpcSrv := NewGRPCServer(loggear.GetLogger())
 
 		// reflectionは開発環境でのみ有効にする
 		// TODO: config/env にIsLocal()を作って、それを使う
 		if envVal != nil && (*envVal == string(env.Local) || *envVal == string(env.Develop)) {
 			reflection.Register(grpcSrv)
-			logkit.Info("gRPC reflection enabled for development environment", "env", *envVal)
+			loggear.Info("gRPC reflection enabled for development environment", "env", *envVal)
 		}
 
 		RegisterGRPCServerLifecycle(lc, shutdowner, grpcSrv)
@@ -34,13 +33,13 @@ func NewGRPCApp(envVal *string) func(lc dikit.LC, shutdowner dikit.Shutdowner, g
 		for _, svc := range grpcServices {
 			svc.RegisterWithServer(grpcSrv)
 		}
-		logkit.Info("gRPC services registered", "count", len(grpcServices))
+		loggear.Info("gRPC services registered", "count", len(grpcServices))
 
 		return grpcSrv
 	}
 }
 
-func NewGRPCServer(logger logging.Logger) *ggrpc.Server {
+func NewGRPCServer(logger loggear.Logger) *ggrpc.Server {
 	logCfg := LogConfig()
 	recCfg := recoverysrv.DefaultRecoveryConfig()
 	logUnarySuccess, logUnaryError := CreateBasicUnaryLogFuncs(logger)
@@ -78,16 +77,16 @@ func RegisterGRPCServerLifecycle(lc dikit.LC, shutdowner dikit.Shutdowner, grpcS
 				return fmt.Errorf("gRPC server failed to listen: %w", err)
 			}
 			go func() {
-				logkit.Info("gRPC server starting", "addr", ":50051")
+				loggear.Info("gRPC server starting", "addr", ":50051")
 				if err := grpcSrv.Serve(listen); err != nil {
-					logkit.Error("gRPC server stopped unexpectedly", "error", err)
+					loggear.Error("gRPC server stopped unexpectedly", "error", err)
 					_ = shutdowner.Shutdown()
 				}
 			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			logkit.Info("Shutting down gRPC server")
+			loggear.Info("Shutting down gRPC server")
 			done := make(chan struct{})
 			go func() {
 				grpcSrv.GracefulStop()

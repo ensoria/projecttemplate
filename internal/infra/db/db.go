@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ensoria/loggear/pkg/loggear"
 	"github.com/ensoria/projecttemplate/internal/plamo/dikit"
-	"github.com/ensoria/projecttemplate/internal/plamo/logkit"
 	schedulerDB "github.com/ensoria/scheduler/pkg/database"
 	workerDB "github.com/ensoria/worker/pkg/database"
 )
@@ -45,11 +45,11 @@ func NewDefaultDBClient[C DatabaseConfig, T DatabaseClient](
 				if err := client.Ping(ctx); err != nil {
 					return fmt.Errorf("DB connection check failed (%s): %w", dbType, err)
 				}
-				logkit.Info("DB connection verified", "type", dbType)
+				loggear.Info("DB connection verified", "type", dbType)
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
-				logkit.Info("Shutting down DB connection", "type", dbType)
+				loggear.Info("Shutting down DB connection", "type", dbType)
 				return client.Close()
 			},
 		})

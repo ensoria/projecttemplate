@@ -5,7 +5,7 @@ go 1.24.2
 require (
 	github.com/ensoria/config v0.0.15
 	github.com/ensoria/grpcgear v0.0.3
-	github.com/ensoria/mb v0.0.4
+	github.com/ensoria/mb v0.0.5
 	github.com/ensoria/rest v0.0.14
 	github.com/ensoria/validator v0.0.4
 	github.com/ensoria/websocket v0.0.2
@@ -45,8 +45,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.38.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.8 // indirect
 	github.com/aws/smithy-go v1.23.0 // indirect
-	github.com/ensoria/scheduler v0.0.1
-	github.com/ensoria/worker v0.0.1
+	github.com/ensoria/scheduler v0.0.2
+	github.com/ensoria/worker v0.0.2
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect

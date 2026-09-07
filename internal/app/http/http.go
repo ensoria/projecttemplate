@@ -109,8 +109,13 @@ func createHTTPPipeline(
 	}
 
 	return &pipeline.HTTP{
-		Modules:           modules,
-		GlobalMiddlewares: globalMiddlewares(configParams.CORS, crossOrigin, verifier, panicResponse),
+		Modules: modules,
+		GlobalMiddlewares: globalMiddlewares(&globalMiddlewareDeps{
+			cors:          configParams.CORS,
+			crossOrigin:   crossOrigin,
+			verifier:      verifier,
+			panicResponse: panicResponse,
+		}),
 		// Layer 2: コントローラ/ミドルウェアチェーンの実行（=レスポンスの計算）の上限時間。
 		// 0で無効。ストリーミング/ファイル/WebSocketは対象外。
 		Timeout:         configParams.Server.HandlerTimeout,
@@ -152,57 +157,112 @@ func RegisterHTTPServerLifecycle(lc dikit.LC, shutdowner dikit.Shutdowner, srv *
 	})
 }
 
-// globalMiddlewares builds the chain every request passes through.
+// globalMiddlewareDeps carries what the chain is built from. It is a struct
+// rather than four parameters so that an entry below can ignore what it does not
+// need without every entry restating the whole list.
+type globalMiddlewareDeps struct {
+	cors          *appconfig.CORS
+	crossOrigin   middleware.CrossOriginChecker
+	verifier      authkit.Verifier
+	panicResponse *rest.Response
+}
+
+// globalMiddleware is one link of the chain: the name it is known by outside
+// this package, and how to build it once its dependencies exist.
 //
-// The list runs outside-in, so authentication sits last: logging, panic recovery
-// and CORS still apply to a request that is refused, and a CORS preflight (which
-// carries no credential) is answered before authentication is considered.
+// Build is a function rather than a ready middleware because the names are
+// needed where the dependencies are not — the document generator resolves no
+// configuration, opens no store and has no verifier, yet has to say what runs.
+type globalMiddleware struct {
+	Name  string
+	Build func(deps *globalMiddlewareDeps) rest.Middleware
+}
+
+// globalMiddlewareChain is the single statement of what runs on every request,
+// in order. The pipeline and the generated documentation are both projections
+// of it — globalMiddlewares takes the Build side, GlobalMiddlewareNames the Name
+// side — so a middleware added here reaches both, and one cannot describe a
+// pipeline the other does not run.
+//
+// It was two lists until 2026-09-07, and they had already drifted: the names
+// stayed at four entries after CSRF and Auth joined the chain, so every
+// generated document described a pipeline the application had stopped running
+// two phases earlier. Nothing could have caught it, because nothing in the type
+// system relates a []rest.Middleware to a []string.
+//
+// # Order
+//
+// The chain runs outside-in, so authentication sits last: logging, panic
+// recovery and CORS still apply to a request that is refused, and a CORS
+// preflight (which carries no credential) is answered before authentication is
+// considered.
 //
 // The cross-origin check sits between CORS and authentication. Before
-// authentication, so a forged request is refused without the session store
-// being asked about the cookie it carried; after CORS, so a preflight is still
+// authentication, so a forged request is refused without the session store being
+// asked about the cookie it carried; after CORS, so a preflight is still
 // answered by the one middleware that knows how to answer it.
 //
 // ⚠ Only one of those two refuses anything. CORS tells the browser what it may
 // read and refuses nothing; the cross-origin check refuses state-changing
 // requests from origins this deployment does not claim. See middleware.CORS for
 // why the split is that way round.
-func globalMiddlewares(
-	cors *appconfig.CORS,
-	crossOrigin middleware.CrossOriginChecker,
-	verifier authkit.Verifier,
-	panicResponse *rest.Response,
-) []rest.Middleware {
-	return []rest.Middleware{
-		mw.Logging(logIncomingRequest),
-		mw.RecoveryWithLogger(panicResponse, logPanicDetails),
-		mw.VerifyBodyParsable,
-		middleware.CORS(cors),
-		middleware.CSRF(crossOrigin),
-		middleware.Auth(verifier),
-	}
+var globalMiddlewareChain = []globalMiddleware{
+	{
+		Name:  apidoc.MiddlewareLogging,
+		Build: func(*globalMiddlewareDeps) rest.Middleware { return mw.Logging(logIncomingRequest) },
+	},
+	{
+		Name: apidoc.MiddlewareRecovery,
+		Build: func(d *globalMiddlewareDeps) rest.Middleware {
+			return mw.RecoveryWithLogger(d.panicResponse, logPanicDetails)
+		},
+	},
+	{
+		Name:  apidoc.MiddlewareVerifyBodyParsable,
+		Build: func(*globalMiddlewareDeps) rest.Middleware { return mw.VerifyBodyParsable },
+	},
+	{
+		Name:  apidoc.MiddlewareCORS,
+		Build: func(d *globalMiddlewareDeps) rest.Middleware { return middleware.CORS(d.cors) },
+	},
+	{
+		Name:  apidoc.MiddlewareCSRF,
+		Build: func(d *globalMiddlewareDeps) rest.Middleware { return middleware.CSRF(d.crossOrigin) },
+	},
+	{
+		Name:  apidoc.MiddlewareAuth,
+		Build: func(d *globalMiddlewareDeps) rest.Middleware { return middleware.Auth(d.verifier) },
+	},
 }
 
-// GlobalMiddlewareNames names, in order, what the chain above installs.
+// globalMiddlewares builds the chain every request passes through, in the order
+// globalMiddlewareChain declares.
+func globalMiddlewares(deps *globalMiddlewareDeps) []rest.Middleware {
+	chain := make([]rest.Middleware, 0, len(globalMiddlewareChain))
+	for _, m := range globalMiddlewareChain {
+		chain = append(chain, m.Build(deps))
+	}
+	return chain
+}
+
+// GlobalMiddlewareNames names, in order, what the chain installs.
 //
-// It lives here rather than where it is read because it is a second statement
-// of the same fact, and the two are only true together. The generated
-// documentation is what reads it, and one entry in particular is acted on: a
-// document describing a cookie-borne credential explains the cross-origin guard
-// only when this list names it. So a name missing here understates what the
-// application does, and a name left behind after its middleware was removed
-// promises a protection that is gone — which is the worse of the two.
+// The generated documentation reads it, and one entry in particular is acted on:
+// a document describing a cookie-borne credential explains the cross-origin
+// guard only when this list names it. A name missing here would understate what
+// the application does, and a name outliving its middleware would promise a
+// protection that is gone — which is why the names are derived from the chain
+// rather than kept beside it.
 //
-// The list drifted once already, staying at four entries after CSRF and Auth
-// joined the chain. A spec below pins the two together by length, which is the
-// part a compiler cannot check.
-var GlobalMiddlewareNames = []string{
-	apidoc.MiddlewareLogging,
-	apidoc.MiddlewareRecovery,
-	apidoc.MiddlewareVerifyBodyParsable,
-	apidoc.MiddlewareCORS,
-	apidoc.MiddlewareCSRF,
-	apidoc.MiddlewareAuth,
+// A fresh slice is returned because the caller hands it to a document model that
+// outlives the call; sharing the backing array would let a renderer sort or
+// truncate the declaration itself.
+func GlobalMiddlewareNames() []string {
+	names := make([]string, 0, len(globalMiddlewareChain))
+	for _, m := range globalMiddlewareChain {
+		names = append(names, m.Name)
+	}
+	return names
 }
 
 // InjectHTTPModules tags the first parameter as the HTTP module group. The

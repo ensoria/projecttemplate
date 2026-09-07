@@ -114,12 +114,12 @@ func serveSessions(cfg *appconfig.Auth, store sessionkit.Store, allowOrigin stri
 				Schemes: []string{authkit.SchemeSession},
 			})},
 		},
-		GlobalMiddlewares: globalMiddlewares(
-			&appconfig.CORS{AllowOriginVal: allowOrigin, AllowCredentialsVal: allowOrigin != ""},
-			crossOrigin,
-			verifier,
-			&rest.Response{Code: http.StatusInternalServerError},
-		),
+		GlobalMiddlewares: globalMiddlewares(&globalMiddlewareDeps{
+			cors:          &appconfig.CORS{AllowOriginVal: allowOrigin, AllowCredentialsVal: allowOrigin != ""},
+			crossOrigin:   crossOrigin,
+			verifier:      verifier,
+			panicResponse: &rest.Response{Code: http.StatusInternalServerError},
+		}),
 	}
 	mux := http.NewServeMux()
 	httpPipeline.Register(mux)

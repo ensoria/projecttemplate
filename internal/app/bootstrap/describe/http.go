@@ -58,7 +58,7 @@ func buildConventions() *apidoc.Conventions {
 		CommonError: apidoc.CommonErrorSchema(reflect.TypeOf(httpdto.Error{})),
 		// Taken from where the chain is built rather than restated here, so the
 		// two cannot say different things. See http.GlobalMiddlewareNames.
-		GlobalMiddlewares: apphttp.GlobalMiddlewareNames,
+		GlobalMiddlewares: apphttp.GlobalMiddlewareNames(),
 	}
 
 	params, err := registry.ModuleParams("default")

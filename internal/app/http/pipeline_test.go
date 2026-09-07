@@ -50,15 +50,23 @@ func request() *rest.Request {
 }
 
 var _ = Describe("globalMiddlewares", func() {
-	settings := &appconfig.CORS{AllowOriginVal: "*"}
-	panicResponse := &rest.Response{Code: http.StatusInternalServerError}
+	// deps builds the chain's dependencies around the verifier under test; the
+	// rest are the same for every spec here.
+	deps := func(verifier authkit.Verifier) *globalMiddlewareDeps {
+		return &globalMiddlewareDeps{
+			cors:          &appconfig.CORS{AllowOriginVal: "*"},
+			crossOrigin:   http.NewCrossOriginProtection(),
+			verifier:      verifier,
+			panicResponse: &rest.Response{Code: http.StatusInternalServerError},
+		}
+	}
 
 	// Accepting the verifier and then forgetting to install the middleware is a
 	// silent hole: the application compiles and serves every request unchecked.
 	It("refuses a request whose credential cannot be trusted", func() {
 		reached := false
 
-		res := chain(globalMiddlewares(settings, http.NewCrossOriginProtection(), rejectingVerifier{}, panicResponse),
+		res := chain(globalMiddlewares(deps(rejectingVerifier{})),
 			func(*rest.Request) *rest.Response {
 				reached = true
 				return &rest.Response{Code: http.StatusOK}
@@ -69,7 +77,7 @@ var _ = Describe("globalMiddlewares", func() {
 	})
 
 	It("keeps serving a request that presents no credential", func() {
-		res := chain(globalMiddlewares(settings, http.NewCrossOriginProtection(), anonymousVerifier{}, panicResponse),
+		res := chain(globalMiddlewares(deps(anonymousVerifier{})),
 			func(*rest.Request) *rest.Response { return &rest.Response{Code: http.StatusOK} })(request())
 
 		Expect(res.Code).To(Equal(http.StatusOK),

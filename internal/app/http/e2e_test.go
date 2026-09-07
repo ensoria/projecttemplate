@@ -100,12 +100,12 @@ func serve() *httptest.Server {
 
 	httpPipeline := &pipeline.HTTP{
 		Modules: modules,
-		GlobalMiddlewares: globalMiddlewares(
-			&appconfig.CORS{AllowOriginVal: "*"},
-			http.NewCrossOriginProtection(),
-			verifier,
-			&rest.Response{Code: http.StatusInternalServerError},
-		),
+		GlobalMiddlewares: globalMiddlewares(&globalMiddlewareDeps{
+			cors:          &appconfig.CORS{AllowOriginVal: "*"},
+			crossOrigin:   http.NewCrossOriginProtection(),
+			verifier:      verifier,
+			panicResponse: &rest.Response{Code: http.StatusInternalServerError},
+		}),
 	}
 	mux := http.NewServeMux()
 	httpPipeline.Register(mux)

@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.0
 	github.com/ensoria/cache v0.0.1
 	github.com/ensoria/config v0.0.35
-	github.com/ensoria/encli v0.0.5
+	github.com/ensoria/encli v0.0.6
 	github.com/ensoria/file v0.0.1
 	github.com/ensoria/gofake v0.0.8
 	github.com/ensoria/grpcgear v0.0.4
@@ -93,7 +93,7 @@ require (
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
-	github.com/redis/go-redis/v9 v9.21.0
+	github.com/redis/go-redis/v9 v9.22.0
 	go.opentelemetry.io/otel v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.uber.org/dig v1.19.0 // indirect

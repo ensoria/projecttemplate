@@ -3,19 +3,14 @@ package http
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 
-	"github.com/ensoria/config/pkg/appconfig"
 	"github.com/ensoria/config/pkg/registry"
 	"github.com/ensoria/ensoria-template/internal/app/http/dto"
 	"github.com/ensoria/ensoria-template/internal/middleware"
-	"github.com/ensoria/ensoria-template/internal/plamo/apidoc"
 	"github.com/ensoria/ensoria-template/internal/plamo/authkit"
 	"github.com/ensoria/ensoria-template/internal/plamo/dikit"
-	"github.com/ensoria/ensoria-template/internal/plamo/restkit"
 	"github.com/ensoria/loggear/pkg/loggear"
-	"github.com/ensoria/rest/pkg/mw"
 	"github.com/ensoria/rest/pkg/pipeline"
 	"github.com/ensoria/rest/pkg/rest"
 	"github.com/ensoria/websocket/pkg/wsconn"
@@ -157,167 +152,8 @@ func RegisterHTTPServerLifecycle(lc dikit.LC, shutdowner dikit.Shutdowner, srv *
 	})
 }
 
-// globalMiddlewareDeps carries what the chain is built from. It is a struct
-// rather than four parameters so that an entry below can ignore what it does not
-// need without every entry restating the whole list.
-type globalMiddlewareDeps struct {
-	cors          *appconfig.CORS
-	crossOrigin   middleware.CrossOriginChecker
-	verifier      authkit.Verifier
-	panicResponse *rest.Response
-}
-
-// globalMiddleware is one link of the chain: the name it is known by outside
-// this package, and how to build it once its dependencies exist.
-//
-// Build is a function rather than a ready middleware because the names are
-// needed where the dependencies are not — the document generator resolves no
-// configuration, opens no store and has no verifier, yet has to say what runs.
-type globalMiddleware struct {
-	Name  string
-	Build func(deps *globalMiddlewareDeps) rest.Middleware
-}
-
-// globalMiddlewareChain is the single statement of what runs on every request,
-// in order. The pipeline and the generated documentation are both projections
-// of it — globalMiddlewares takes the Build side, GlobalMiddlewareNames the Name
-// side — so a middleware added here reaches both, and one cannot describe a
-// pipeline the other does not run.
-//
-// It was two lists until 2026-09-07, and they had already drifted: the names
-// stayed at four entries after CSRF and Auth joined the chain, so every
-// generated document described a pipeline the application had stopped running
-// two phases earlier. Nothing could have caught it, because nothing in the type
-// system relates a []rest.Middleware to a []string.
-//
-// # Order
-//
-// The chain runs outside-in, so authentication sits last: logging, panic
-// recovery and CORS still apply to a request that is refused, and a CORS
-// preflight (which carries no credential) is answered before authentication is
-// considered.
-//
-// The cross-origin check sits between CORS and authentication. Before
-// authentication, so a forged request is refused without the session store being
-// asked about the cookie it carried; after CORS, so a preflight is still
-// answered by the one middleware that knows how to answer it.
-//
-// ⚠ Only one of those two refuses anything. CORS tells the browser what it may
-// read and refuses nothing; the cross-origin check refuses state-changing
-// requests from origins this deployment does not claim. See middleware.CORS for
-// why the split is that way round.
-var globalMiddlewareChain = []globalMiddleware{
-	{
-		Name:  apidoc.MiddlewareLogging,
-		Build: func(*globalMiddlewareDeps) rest.Middleware { return mw.Logging(logIncomingRequest) },
-	},
-	{
-		Name: apidoc.MiddlewareRecovery,
-		Build: func(d *globalMiddlewareDeps) rest.Middleware {
-			return mw.RecoveryWithLogger(d.panicResponse, logPanicDetails)
-		},
-	},
-	{
-		Name:  apidoc.MiddlewareVerifyBodyParsable,
-		Build: func(*globalMiddlewareDeps) rest.Middleware { return mw.VerifyBodyParsable },
-	},
-	{
-		Name:  apidoc.MiddlewareCORS,
-		Build: func(d *globalMiddlewareDeps) rest.Middleware { return middleware.CORS(d.cors) },
-	},
-	{
-		Name:  apidoc.MiddlewareCSRF,
-		Build: func(d *globalMiddlewareDeps) rest.Middleware { return middleware.CSRF(d.crossOrigin) },
-	},
-	{
-		Name:  apidoc.MiddlewareAuth,
-		Build: func(d *globalMiddlewareDeps) rest.Middleware { return middleware.Auth(d.verifier) },
-	},
-}
-
-// globalMiddlewares builds the chain every request passes through, in the order
-// globalMiddlewareChain declares.
-func globalMiddlewares(deps *globalMiddlewareDeps) []rest.Middleware {
-	chain := make([]rest.Middleware, 0, len(globalMiddlewareChain))
-	for _, m := range globalMiddlewareChain {
-		chain = append(chain, m.Build(deps))
-	}
-	return chain
-}
-
-// GlobalMiddlewareNames names, in order, what the chain installs.
-//
-// The generated documentation reads it, and one entry in particular is acted on:
-// a document describing a cookie-borne credential explains the cross-origin
-// guard only when this list names it. A name missing here would understate what
-// the application does, and a name outliving its middleware would promise a
-// protection that is gone — which is why the names are derived from the chain
-// rather than kept beside it.
-//
-// A fresh slice is returned because the caller hands it to a document model that
-// outlives the call; sharing the backing array would let a renderer sort or
-// truncate the declaration itself.
-func GlobalMiddlewareNames() []string {
-	names := make([]string, 0, len(globalMiddlewareChain))
-	for _, m := range globalMiddlewareChain {
-		names = append(names, m.Name)
-	}
-	return names
-}
-
 // InjectHTTPModules tags the first parameter as the HTTP module group. The
 // remaining parameters (the credential verifier) are resolved by type.
 func InjectHTTPModules(f any) any {
 	return fx.Annotate(f, fx.ParamTags(dikit.GroupTagHttpModules, ``))
-}
-
-func logIncomingRequest(req *rest.Request, res *rest.Response) {
-	loggear.Info("HTTP Request",
-		slog.String("method", req.Method()),
-		slog.String("path", req.Path()),
-		slog.Int("status_code", res.Code),
-		slog.String("remote_addr", req.RemoteAddr()),
-		slog.String("user_agent", req.UserAgent()),
-		slog.String("type", "access_log"),
-	)
-}
-
-// panicViolationGroup is the key a contract violation's fields are nested under
-// in a panic record.
-//
-// They are grouped rather than written flat beside the record's own fields
-// because a violation names the endpoint as well: expanded flat, "method" would
-// appear in one JSON object twice and neither occurrence could be relied on.
-// Grouping also leaves "type" saying panic_log and nothing else, which is what a
-// panic alert matches on.
-const panicViolationGroup = "contract_violation"
-
-// logPanicDetails records a panic the recovery middleware caught. It is the
-// only account of a request that failed for a reason nobody anticipated, so it
-// carries what identifies the defect — the value, its type, the stack — and the
-// least that identifies where it came from: the endpoint and the caller's
-// address, which is what makes it possible to see what else that caller sent.
-//
-// It deliberately leaves out the client's user agent. A panic is a defect in
-// this server, and which browser asked does not help say which defect it is;
-// the access log written for the same request carries it for the cases where
-// the client population is the question.
-func logPanicDetails(r *rest.Request, panicValue interface{}, stackTrace []byte) {
-	args := []any{
-		slog.String("method", r.Method()),
-		slog.String("url", r.URLStr()),
-		slog.String("remote_addr", r.RemoteAddr()),
-		slog.Any("panic_value", panicValue),
-		slog.String("panic_type", fmt.Sprintf("%T", panicValue)),
-		slog.String("stack_trace", string(stackTrace)),
-		slog.String("type", "panic_log"),
-	}
-	// A panic carrying a contract violation can say which promise the
-	// implementation broke, which a stack trace of generic frames cannot. The
-	// assertion is on the interface rather than on any one kind of violation, so
-	// a kind added later is expanded here without this file being touched.
-	if violation, ok := panicValue.(restkit.ContractViolation); ok {
-		args = append(args, slog.Group(panicViolationGroup, restkit.LogArgs(violation)...))
-	}
-	loggear.Error("Panic Recovered", args...)
 }

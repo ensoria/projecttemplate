@@ -1,5 +1,7 @@
 package apidoc
 
+import "github.com/ensoria/encli/pkg/apicontract"
+
 import "reflect"
 
 // Conventions は API 全体の共通規約(docai CONVENTIONS.md の素材)。
@@ -42,14 +44,21 @@ type SecurityScheme struct {
 }
 
 // SecurityScheme の Type / In / Scheme に使う値(OpenAPI の語彙に合わせる)。
+//
+// 値そのものは [apicontract] が持つ。ここはその再輸出であり、
+// **読み取り側(encli のレンダラ)と同じ定数を指している**。
+// この JSON を書く側と読む側は別モジュールで互いのソースを見られないので、
+// レンダラが分岐に使う文字列を両側で綴ると、食い違ったときに誰も気づけない
+// —— フィールドは届いているので、既定値に落ちた文書が黙って出るだけになる。
+// 詳しい理由は apicontract のパッケージコメントを参照。
 const (
-	SecuritySchemeTypeHTTP   = "http"
-	SecuritySchemeTypeAPIKey = "apiKey"
-	SecuritySchemeInHeader   = "header"
-	SecuritySchemeInCookie   = "cookie"
-	SecuritySchemeInQuery    = "query"
-	SecuritySchemeBearer     = "bearer"
-	BearerFormatJWT          = "JWT"
+	SecuritySchemeTypeHTTP   = apicontract.SchemeTypeHTTP
+	SecuritySchemeTypeAPIKey = apicontract.SchemeTypeAPIKey
+	SecuritySchemeInHeader   = apicontract.InHeader
+	SecuritySchemeInCookie   = apicontract.InCookie
+	SecuritySchemeInQuery    = apicontract.InQuery
+	SecuritySchemeBearer     = apicontract.SchemeBearer
+	BearerFormatJWT          = apicontract.BearerFormatJWT
 )
 
 // GlobalMiddlewares に載せる名前。
@@ -62,19 +71,16 @@ const (
 // —— しかも、読み手には安心して見える方向に。
 //
 // 残りはこのアプリケーションが自分で決める名前で、生成側は素通しするだけ。
-// プロジェクトが独自のミドルウェアを足すなら、ここに好きな名前を足してよい。
-//
-// 🔖 **encli リリース後にすること**: MiddlewareCSRF を
-// `github.com/ensoria/encli/pkg/apicontract` の同名定数の再輸出に変える。
-// 分岐に使う文字列を両側で綴るのをやめるための共有パッケージを encli 側に
-// 用意済みだが、テンプレートは公開版の encli を参照しているため、
-// リリースされるまで import できない(ここと SecurityScheme の Type / In も同じ)。
+// プロジェクトが独自のミドルウェアを足すなら、ここに好きな名前を足してよい
+// —— 共有する必要は無い。逆に言えば、**生成側が新しく分岐に使う名前を覚えたら、
+// その名前はそのときに apicontract へ移す**。
 const (
+	MiddlewareCSRF = apicontract.MiddlewareCSRF
+
 	MiddlewareLogging            = "logging"
 	MiddlewareRecovery           = "recovery"
 	MiddlewareVerifyBodyParsable = "verify-body-parsable"
 	MiddlewareCORS               = "cors"
-	MiddlewareCSRF               = "csrf"
 	MiddlewareAuth               = "auth"
 )
 

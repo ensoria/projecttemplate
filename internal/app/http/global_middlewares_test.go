@@ -1,10 +1,14 @@
 package http
 
 import (
+	"net/http"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/ensoria/config/pkg/appconfig"
 	"github.com/ensoria/ensoria-template/internal/plamo/apidoc"
+	"github.com/ensoria/ensoria-template/internal/plamo/authkit"
 	"github.com/ensoria/rest/pkg/rest"
 )
 
@@ -14,11 +18,18 @@ import (
 // running. They are one list now, which makes that particular drift
 // unrepresentable — what is left to check is that each entry is complete, since
 // an entry with no name or no builder still compiles.
-var _ = Describe("globalMiddlewareChain", func() {
-	deps := &globalMiddlewareDeps{
-		panicResponse: &rest.Response{},
+// chainDeps builds what the chain is assembled from, around the verifier under
+// test. Everything else is the same for every spec here.
+func chainDeps(verifier authkit.Verifier) *globalMiddlewareDeps {
+	return &globalMiddlewareDeps{
+		cors:          &appconfig.CORS{AllowOriginVal: "*"},
+		crossOrigin:   http.NewCrossOriginProtection(),
+		verifier:      verifier,
+		panicResponse: &rest.Response{Code: http.StatusInternalServerError},
 	}
+}
 
+var _ = Describe("globalMiddlewareChain", func() {
 	It("gives every middleware it installs a name", func() {
 		for i, m := range globalMiddlewareChain {
 			Expect(m.Name).ToNot(BeEmpty(), "entry %d has no name", i)
@@ -26,7 +37,7 @@ var _ = Describe("globalMiddlewareChain", func() {
 	})
 
 	It("builds a middleware for every name it publishes", func() {
-		chain := globalMiddlewares(deps)
+		chain := globalMiddlewares(chainDeps(anonymousVerifier{}))
 
 		Expect(chain).To(HaveLen(len(GlobalMiddlewareNames())))
 		for i, middleware := range chain {
@@ -79,3 +90,28 @@ func indexOf(names []string, name string) int {
 	}
 	return -1
 }
+
+var _ = Describe("globalMiddlewares", func() {
+	// Accepting the verifier and then forgetting to install the middleware is a
+	// silent hole: the application compiles and serves every request unchecked.
+	It("refuses a request whose credential cannot be trusted", func() {
+		reached := false
+
+		res := chain(globalMiddlewares(chainDeps(rejectingVerifier{})),
+			func(*rest.Request) *rest.Response {
+				reached = true
+				return &rest.Response{Code: http.StatusOK}
+			})(request())
+
+		Expect(res.Code).To(Equal(http.StatusUnauthorized))
+		Expect(reached).To(BeFalse(), "the request reached the handler without being authenticated")
+	})
+
+	It("keeps serving a request that presents no credential", func() {
+		res := chain(globalMiddlewares(chainDeps(anonymousVerifier{})),
+			func(*rest.Request) *rest.Response { return &rest.Response{Code: http.StatusOK} })(request())
+
+		Expect(res.Code).To(Equal(http.StatusOK),
+			"a public endpoint must still be reachable without a credential")
+	})
+})

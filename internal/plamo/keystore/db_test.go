@@ -45,13 +45,21 @@ func sqliteDB() *sql.DB {
 	return db
 }
 
+// issuedAt is the moment the fixture claims every key was issued.
+//
+// Nothing the store reads looks at it — the lookup selects the subject, the
+// scopes and the deadline — but the format requires it, so a fixture that left
+// it out would be writing a record encli could not have written.
+var issuedAt = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
 // insertKey writes a record the way whatever issues keys would.
 func insertKey(db *sql.DB, key, subject, scopes string, expiresAt any) {
 	GinkgoHelper()
 
 	statement, err := enclikeystore.InsertSQL(enclikeystore.DriverSQLite)
 	Expect(err).NotTo(HaveOccurred())
-	_, err = db.Exec(statement, enclikeystore.Fingerprint(key), subject, scopes, expiresAt)
+	_, err = db.Exec(statement,
+		enclikeystore.Fingerprint(key), subject, scopes, expiresAt, issuedAt)
 	Expect(err).NotTo(HaveOccurred())
 }
 

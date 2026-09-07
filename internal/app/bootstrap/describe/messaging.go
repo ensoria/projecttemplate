@@ -120,10 +120,11 @@ func buildServers(envVal *string, broker *mb.Config) []*msgdoc.ServerSpec {
 
 	var servers []*msgdoc.ServerSpec
 	if params, err := registry.ModuleParams("default"); err == nil {
+		protocol, host := websocketAddress(params.Server.PublicURLOrDefault())
 		servers = append(servers, &msgdoc.ServerSpec{
 			Name:        wsServerName,
-			Protocol:    "ws",
-			Host:        fmt.Sprintf("localhost:%d", params.Server.Port),
+			Protocol:    protocol,
+			Host:        host,
 			Environment: env,
 			Description: "WebSocket endpoint served by this application",
 		})
@@ -135,6 +136,31 @@ func buildServers(envVal *string, broker *mb.Config) []*msgdoc.ServerSpec {
 	msgdoc.SortServers(servers)
 	return servers
 }
+
+// websocketAddress turns the address this deployment answers on into the pair
+// AsyncAPI wants for a server: the protocol and the host.
+//
+// The scheme is translated rather than carried: a WebSocket connection to an
+// application served over https is wss, and publishing ws there tells a browser
+// to open a connection it will refuse as mixed content. A path prefix is dropped
+// because AsyncAPI puts the path on the channel, and this application's channels
+// declare their own.
+func websocketAddress(publicURL string) (protocol, host string) {
+	parsed, err := url.Parse(publicURL)
+	if err != nil || parsed.Host == "" {
+		return wsProtocol, publicURL
+	}
+	if parsed.Scheme == "https" {
+		return wssProtocol, parsed.Host
+	}
+	return wsProtocol, parsed.Host
+}
+
+// The two WebSocket schemes, named so the translation above reads as one.
+const (
+	wsProtocol  = "ws"
+	wssProtocol = "wss"
+)
 
 // brokerServer describes the broker endpoint, without its credentials.
 //

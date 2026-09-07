@@ -903,17 +903,28 @@ environments:
 | Which security schemes exist at all | `AUTH_MODE`, `AUTH_API_KEYS` / `AUTH_KEYSTORE`, `AUTH_SESSION_STORE` |
 | The API key header name, the session cookie name | `AUTH_API_KEY_HEADER`, `AUTH_SESSION_COOKIE_NAME` |
 | The whole CORS and browser-security section | `CORS_*` |
+| The server URL — `Environments`, and AsyncAPI's WebSocket server | `HTTP_PUBLIC_URL` |
 
 A document generated with `-e local` therefore describes a local deployment. If
 `AUTH_SESSION_STORE` is unset there and set in production, the published document
 says the API has no session cookie — which is wrong in the direction a reader
 acts on.
 
-> ⚠ The `Environments` section is the exception: it is always written as
-> `local` → `http://localhost:<SERVER_PORT>`, whatever `--env` says, because
-> nothing in the configuration records the address a deployment answers on. Only
-> the port follows the environment. Edit that section, or take it as the
-> placeholder it is.
+**Set `HTTP_PUBLIC_URL` in every deployed environment.** It is the address callers
+reach the application on — not where the process listens, which behind an ingress
+is a different thing entirely, and which is what the rest of the `HTTP_` keys
+describe. Nothing dials it: it exists so the generated documents can say where
+the API is.
+
+```sh
+HTTP_PUBLIC_URL=https://api.example.com
+```
+
+Unset, it falls back to `http://localhost:<HTTP_PORT>`, which is right on a
+developer's machine and reads as an obvious placeholder anywhere else. The
+AsyncAPI WebSocket server follows the same setting and translates the scheme, so
+an application on `https://` publishes `wss://` — publishing `ws` there would
+tell a browser to open a connection it refuses as mixed content.
 
 ```sh
 encli generate openapi -e production

@@ -28,7 +28,7 @@ func BuildHTTP(envVal *string) (*apidoc.APISpec, error) {
 
 	spec := apidoc.Build(modules)
 	spec.Info = apiinfo.Info()
-	spec.Conventions = buildConventions()
+	spec.Conventions = buildConventions(*envVal)
 	return spec, nil
 }
 
@@ -53,7 +53,7 @@ func resolveHTTPModules() ([]*rest.Module, error) {
 }
 
 // buildConventions は config / pipeline 由来の共通規約を集める。
-func buildConventions() *apidoc.Conventions {
+func buildConventions(envVal string) *apidoc.Conventions {
 	conv := &apidoc.Conventions{
 		CommonError: apidoc.CommonErrorSchema(reflect.TypeOf(httpdto.Error{})),
 		// Taken from where the chain is built rather than restated here, so the
@@ -65,8 +65,16 @@ func buildConventions() *apidoc.Conventions {
 	if err != nil {
 		return conv
 	}
+	// Labelled with the environment being described rather than always "local",
+	// and taken from HTTP_PUBLIC_URL rather than assumed.
+	//
+	// Both used to be fixed, which made this the one part of a generated
+	// document that did not follow --env: a document generated for production
+	// announced itself as local and sent its readers to their own machine.
+	// PublicURLOrDefault still answers with localhost when nothing is configured,
+	// which is right for a developer and reads as a placeholder anywhere else.
 	conv.BaseURLs = map[string]string{
-		"local": fmt.Sprintf("http://localhost:%d", params.Server.Port),
+		envVal: params.Server.PublicURLOrDefault(),
 	}
 	conv.SecuritySchemes = securitySchemes(params.Auth)
 	conv.CORS = &apidoc.CORS{

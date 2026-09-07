@@ -142,6 +142,67 @@ services:
       - ensoria-ensoria-template-network
 
 
+  # Keycloak: an identity provider for developing against real tokens.
+  #
+  # It is behind a profile, so an ordinary `docker compose up` does not start it.
+  # Bring it up only when you want it:
+  #
+  #   docker compose --profile keycloak up -d
+  #
+  # Why it is optional: AUTH_MODE=hs256 with AUTH_SECRET is enough for almost all
+  # local work, and `encli auth token` issues a token against it in one command.
+  # What that setup cannot show is the arrangement every deployed environment
+  # uses — AUTH_MODE=jwks, where the application holds only the issuer's public
+  # keys and can sign nothing. Verification, key rotation, `iss`/`aud` checks and
+  # the browser sign-in flow all behave differently there, and this service is
+  # how that is exercised before it reaches an environment where it matters.
+  #
+  # Port 8081 because the application takes 8080.
+  #
+  # `start-dev` keeps everything in an in-memory H2 database and serves plain
+  # HTTP. Both are wrong for production and right here: the realm is disposable,
+  # and a certificate would only be in the way. KC_HOSTNAME fixes what Keycloak
+  # calls itself, so that the `iss` claim in a token is the URL the application
+  # is configured to expect rather than a container hostname it cannot resolve.
+  #
+  # --import-realm reads .keycloak/*.json on first start only. Once the realm
+  # exists, editing that file changes nothing; `docker compose down -v` drops the
+  # volume so the next start imports again.
+  #
+  # See "Developing against Keycloak" in README.md for the settings to put in
+  # internal/config/.env and how to get a token.
+  ensoria-ensoria-template-keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: ensoria-ensoria-template-keycloak
+    profiles: ["keycloak"]
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8081
+      # Without these the issuer in an issued token follows the request's Host
+      # header, and a token fetched by one client would then fail the `iss` check
+      # made against another.
+      KC_HOSTNAME: http://localhost:8081
+      KC_HOSTNAME_STRICT: "false"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8081:8081"   # admin console + OIDC endpoints (http://localhost:8081)
+    volumes:
+      - "./.keycloak:/opt/keycloak/data/import:ro"
+      - keycloak-data:/opt/keycloak/data
+    healthcheck:
+      # The image carries no curl or wget, so the check goes through the JVM's
+      # own client on the management port Keycloak opens for health.
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\nHost: localhost\nConnection: close\n\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - ensoria-ensoria-template-network
+
+
 networks:
   ensoria-ensoria-template-network:
     driver: bridge
@@ -158,5 +219,7 @@ volumes:
   registry-data:
     driver: local
   minio-data:
+    driver: local
+  keycloak-data:
     driver: local
 

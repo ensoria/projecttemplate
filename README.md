@@ -116,8 +116,9 @@ status it drifted with:
 ```
 
 Alert on `type = "declaration_drift_log"` — matching the message text instead
-would break the next time the wording changes. The same field naming is used by
-the access log (`access_log`) and the panic log (`panic_log`).
+would break the next time the wording changes. Every record this template writes
+deliberately carries the same field; the full list is in
+[What to alert on](#what-to-alert-on) below.
 
 To fix one when it fires: take the `method` and `path` from the record, find that
 endpoint, and declare the status the record names — as `Success` if it is the
@@ -125,6 +126,56 @@ endpoint's ordinary answer, or as an entry in `Responses` if it is one of
 several. Then regenerate the documentation. Nothing else has to change: the
 handler was already returning that status, and callers were already receiving
 it. What was missing was the declaration the documentation is generated from.
+
+#### What to alert on
+
+Every record worth searching for carries a stable `type`, so an alert can be
+written against a value rather than against a sentence somebody will reword. The
+levels below are what the application actually logs at, and they are not the same
+question as what should page somebody: **an ERROR that fires once an hour is
+noise, and a WARN that suddenly fires a thousand times is an incident.**
+
+| `type` | Level | What happened | Page? |
+|---|---|---|---|
+| `panic_log` | ERROR | A request failed for a reason nobody anticipated | **Yes** |
+| `subscriber_panic_log` | ERROR | A broker message handler panicked | **Yes** |
+| `session_store_unavailable_log` | ERROR | The session store could not be asked about a cookie | **Yes** |
+| `session_not_created_log` | ERROR | A caller with a good token was not given a session | **Yes** |
+| `session_not_ended_log` | ERROR | A sign-out did not take effect; the session still works | **Yes** |
+| `declaration_drift_log` | ERROR | The generated documentation no longer matches the code | On a trend |
+| `upgrade_origin_denied_log` | WARN | A WebSocket upgrade was refused for where it came from | On a rate |
+| `cross_origin_denied_log` | WARN | A state-changing request was refused for where it came from | On a rate |
+| `replaced_session_kept_log` | WARN | A session left behind by a new sign-in could not be ended | No |
+| `session_rejected_log` | INFO | A request presented a session cookie that no longer resolves | No |
+| `access_log` | INFO | One request was served | No |
+
+Four of these deserve a word about why they sit where they do.
+
+**`session_store_unavailable_log` is the outage; `session_rejected_log` is
+Tuesday.** They are separate types rather than one type with a reason field
+precisely so the alert does not depend on getting a filter right. A stale cookie
+is ordinary — a session expired, or somebody signed out on another device — and
+nobody should ever be woken for it. A store that cannot be reached signs nobody
+out (deliberately: see the Cookie authentication section) but means every cookie
+is being treated as unverifiable, which is an outage in progress.
+
+**`session_not_ended_log` outranks `session_not_created_log` in practice.** Both
+mean the store stopped answering, but a failed sign-out leaves a caller
+*believing* they are signed out while their session still works — on a shared
+machine, that is the failure with a person on the other end of it.
+
+**`cross_origin_denied_log` and `upgrade_origin_denied_log` are rate alerts, not
+event alerts.** A handful is ordinary: a frontend deployed on an origin nobody
+added to `CORS_ALLOW_ORIGIN` produces them until someone does. What is worth
+knowing is a sudden stream from origins nobody recognises — for the upgrade one
+especially, since a refused upgrade is the shape a cross-site WebSocket
+hijacking attempt takes.
+
+**`replaced_session_kept_log` is a leak, not a failure.** Signing in again from
+the same browser could not end the session it replaced. The record left behind is
+unreachable from that browser and expires on its own, so nothing is broken; a
+steady stream of them says the store is unhealthy, and one now and then says
+nothing at all.
 
 ### 誰が呼べるか: `Security`
 
@@ -410,6 +461,52 @@ registered on the same path and the collision is yours to discover at runtime.
 > cookie**, so both answers leave the caller signed out; a client can treat them
 > identically. Signing out twice therefore produces one `204` and one `401`.
 
+##### Trying it
+
+Both routes are ordinary HTTP, so the whole exchange fits in `curl`. The first
+line stands in for the identity provider; with a real one the token comes from
+there instead (see [Developing against Keycloak](#developing-against-keycloak)).
+
+```sh
+# 1. a token, the way an identity provider would hand one over
+TOKEN=$(encli auth token --sub alice --scope users:read)
+
+# 2. trade it for a session
+curl -i -X POST localhost:8080/session \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"persistent":false}'
+
+# HTTP/1.1 201 Created
+# Set-Cookie: __Host-session=MTIdMx4suWOEK-ur...; Path=/; HttpOnly; Secure; SameSite=Lax
+# {"subject":"alice","persistent":false,"expires_at":"2026-09-07T13:56:09Z"}
+
+# 3. from here on the cookie is the whole credential — no token, no header
+curl -s -o /dev/null -w '%{http_code}\n' localhost:8080/users/1 \
+  -H 'Cookie: __Host-session=MTIdMx4suWOEK-ur...'
+# 200
+
+# 4. sign out. The session stops working immediately and everywhere
+curl -i -X DELETE localhost:8080/session -H 'Cookie: __Host-session=MTIdMx4suWOEK-ur...'
+# HTTP/1.1 204 No Content
+```
+
+`{"persistent":true}` in step 2 is the "keep me signed in" box: it puts the
+session on the longer of the two lifetimes
+(`AUTH_SESSION_PERSISTENT_ABSOLUTE_TTL` rather than `AUTH_SESSION_ABSOLUTE_TTL`).
+Nothing else about the exchange changes.
+
+> ⚠ **A browser on plain `http://` will not send this cookie back.** It is issued
+> `Secure`, which `curl` ignores and a browser does not. To develop a frontend
+> over plain HTTP, set **both** of these — the first alone is refused at startup,
+> because a browser silently discards a `__Host-` cookie that is not `Secure` and
+> every sign-in would appear to succeed and then not have happened:
+>
+> ```sh
+> AUTH_SESSION_COOKIE_INSECURE=true   # local and test only
+> AUTH_SESSION_COOKIE_NAME=session    # the __Host- prefix requires Secure
+> ```
+
 ##### Changing the path
 
 `/session` is **not reserved by machinery**. Nothing in the framework routes,
@@ -464,6 +561,38 @@ session.NewSessionCookies,         // may be removed once the blank import is go
 Deleting `NewSessionStore` does not turn anything off — it fails the graph with
 `missing type: sessionkit.Store`, because the verifier asks for one whether or
 not sessions are configured.
+
+##### Where the sessions are kept
+
+`AUTH_SESSION_STORE` picks the store, and the choice is about what a restart
+does:
+
+| Value | Records live | Use |
+|---|---|---|
+| `redis` | In Redis, on database `AUTH_SESSION_REDIS_DB` (default `4`) | Everywhere. The only option outside local/test |
+| `memory` | In the process | Local and test only — **refused at startup elsewhere**, with the reason |
+
+`memory` loses every session when the process stops, and two processes do not
+share one. That is fine for a single `go run` and wrong for anything else, which
+is why naming it outside local/test is a startup failure rather than a surprise
+during a rolling deploy.
+
+The Redis keys are namespaced so that a person looking at the database can tell
+what they are reading:
+
+```
+auth:session:<id>       one session record
+auth:revoked:<subject>  the marker RevokeSubject leaves
+auth:apikey:<fingerprint>   API keys, when AUTH_KEYSTORE=redis (database 3)
+```
+
+**Give sessions a database of their own.** The default already does
+(`AUTH_SESSION_REDIS_DB=4`, with API keys on `3` and the ordinary read cache
+elsewhere), and the reason is blunt: a `FLUSHDB` aimed at a cache is a routine
+thing to do, and on a shared database it signs out every user at once. Session
+records also expire on their own — every one is written with a TTL — so a store
+that grows without bound means something else is wrong, not that a cleanup job is
+missing.
 
 ##### What a cookie forces you to configure
 
@@ -534,6 +663,106 @@ catch — both are pinned by specs in
 > **CORS is not access control.** It decides what a *page in a browser* may read,
 > and nothing else — every non-browser caller ignores it. What may be called, and
 > by whom, is `Endpoint.Security` and the credential the caller presents.
+
+
+### Developing against Keycloak
+
+`AUTH_MODE=hs256` with `encli auth token` is enough for almost all local work,
+and it is what the template ships with. What it cannot show is the arrangement
+every deployed environment actually uses — `AUTH_MODE=jwks`, where the
+application holds only the issuer's **public** keys and can sign nothing.
+
+That difference is not cosmetic. Under `jwks` the application fetches and caches
+a key set, checks `iss` and `aud`, and gets its `sub` and its scopes from
+somebody else's decisions. A browser sign-in becomes a redirect to a login page
+rather than a command you ran. Each of those is a way to be misconfigured, and
+none of them exists under `hs256` — so the first time they are exercised should
+not be in an environment where it matters.
+
+`compose.yaml` carries a Keycloak for exactly that, behind a profile so it does
+not start with everything else:
+
+```sh
+docker compose --profile keycloak up -d
+```
+
+It imports [.keycloak/ensoria-realm.json](.keycloak/ensoria-realm.json) on first
+start: a realm named `ensoria`, a public client `ensoria-frontend`, a user
+`alice` / `alice`, and one client scope per permission the template's endpoints
+declare. [.keycloak/README.md](.keycloak/README.md) explains what is in it and
+why — including two mappers without which Keycloak's defaults produce a token
+this application refuses.
+
+#### Pointing the application at it
+
+Comment out `AUTH_MODE=hs256` and `AUTH_SECRET` in
+[internal/config/.env](internal/config/.env) — a project is in one mode or the
+other, not both — and add:
+
+```sh
+AUTH_MODE=jwks
+AUTH_JWKS_URL=http://localhost:8081/realms/ensoria/protocol/openid-connect/certs
+AUTH_ISSUER=http://localhost:8081/realms/ensoria
+AUTH_AUDIENCE=ensoria
+```
+
+`AUTH_ISSUER` and `AUTH_AUDIENCE` are optional in general and worth setting here,
+because leaving them out is what a mistake looks like: without `aud`, any token
+the issuer signed is accepted, including one minted for a different application
+in the same realm.
+
+`encli auth token` stops working at this point, and says so rather than issuing
+something that would be refused — under `jwks` the application has nothing to
+sign with. Tokens come from Keycloak instead:
+
+```sh
+TOKEN=$(curl -s -X POST \
+  http://localhost:8081/realms/ensoria/protocol/openid-connect/token \
+  -d grant_type=password -d client_id=ensoria-frontend \
+  -d username=alice -d password=alice \
+  -d scope="users:read users:write orders:read" \
+  | jq -r .access_token)
+```
+
+`scope` is the part worth noticing: the permissions are **optional** client
+scopes, so a caller asks for them and gets a token carrying only those. Asking
+for none is how you see a `403` from an endpoint that declares
+`Scopes: []string{"users:read"}` — the same demonstration the API key section
+makes with a key that lacks a scope.
+
+From here everything is as it was. The token is a bearer token:
+
+```sh
+curl -H "Authorization: Bearer $TOKEN" localhost:8080/users/1          # 200
+curl -X POST localhost:8080/session -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"persistent":false}'        # 201 + Set-Cookie
+```
+
+The `subject` in that response is now Keycloak's user id rather than a name you
+chose, which is what a real deployment records as the session's owner.
+
+#### The three things that usually go wrong
+
+- **`iss` does not match.** The token says one thing and `AUTH_ISSUER` another,
+  usually because Keycloak decided its own hostname from the request. The compose
+  service sets `KC_HOSTNAME` so it cannot — if you run Keycloak some other way,
+  set it there too.
+- **`aud` is `account`.** Keycloak's default audience is not the application, so
+  every token is refused. The realm adds `ensoria` with an audience mapper.
+- **Scopes arrive but nothing is authorized.** The application reads permissions
+  from the space-separated `scope` claim (RFC 8693). Keycloak can also be
+  configured to put roles in `realm_access.roles`, or into `scope` as a JSON
+  array — neither is read, and both fail silently, leaving a token that
+  authenticates and authorizes nothing.
+
+#### Turning it off again
+
+Restore `AUTH_MODE=hs256` and `AUTH_SECRET`, and stop the container:
+
+```sh
+docker compose --profile keycloak down     # keep the realm
+docker compose --profile keycloak down -v  # drop it, so the JSON is imported again
+```
 
 
 ### 検証は宣言するだけ
@@ -661,6 +890,46 @@ encli generate openapi    # OpenAPI 3.1（docs/openapi.yaml）
 describe は build tag `apidoc_describe` で本番ビルドから隔離されており、
 **DB やメッセージブローカーには接続しません**（接続系はスタブが注入され、fx のライフサイクルも起動しません）。
 そのためインフラを立ち上げずにドキュメントを生成できます。
+
+#### Generate with the settings of the environment you are describing
+
+Every generator takes `--env` (`-e`), defaulting to `local`, and it decides more
+than which database URL goes unused. **Parts of the document are read out of the
+configuration**, so the same code generates different documents from different
+environments:
+
+| In the document | Comes from |
+|---|---|
+| Which security schemes exist at all | `AUTH_MODE`, `AUTH_API_KEYS` / `AUTH_KEYSTORE`, `AUTH_SESSION_STORE` |
+| The API key header name, the session cookie name | `AUTH_API_KEY_HEADER`, `AUTH_SESSION_COOKIE_NAME` |
+| The whole CORS and browser-security section | `CORS_*` |
+
+A document generated with `-e local` therefore describes a local deployment. If
+`AUTH_SESSION_STORE` is unset there and set in production, the published document
+says the API has no session cookie — which is wrong in the direction a reader
+acts on.
+
+> ⚠ The `Environments` section is the exception: it is always written as
+> `local` → `http://localhost:<SERVER_PORT>`, whatever `--env` says, because
+> nothing in the configuration records the address a deployment answers on. Only
+> the port follows the environment. Edit that section, or take it as the
+> placeholder it is.
+
+```sh
+encli generate openapi -e production
+encli generate docai -e production
+```
+
+**This has to run where that environment's settings resolve.** On a fresh
+checkout only `-e local` does: `internal/config/production.yml` expects values a
+deployment supplies, and describe fails naming the first key it could not find
+rather than generating a document from half a configuration. So the place for
+the command above is the pipeline that already holds those values — the same one
+that deploys — not a developer's machine.
+
+Nothing connects, in any environment: describe injects stubs for every
+infrastructure type and never starts the fx lifecycle. `-e production` reads that
+environment's configuration and nothing more.
 
 ### Adding a dependency that describe has to stub
 

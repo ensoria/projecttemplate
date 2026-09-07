@@ -7,6 +7,7 @@ import (
 	"github.com/ensoria/config/pkg/registry"
 	assets "github.com/ensoria/ensoria-template"
 	"github.com/ensoria/ensoria-template/internal/app/apiinfo"
+	apphttp "github.com/ensoria/ensoria-template/internal/app/http"
 	httpdto "github.com/ensoria/ensoria-template/internal/app/http/dto"
 	"github.com/ensoria/ensoria-template/internal/plamo/apidoc"
 	"github.com/ensoria/ensoria-template/internal/plamo/dikit"
@@ -54,8 +55,10 @@ func resolveHTTPModules() ([]*rest.Module, error) {
 // buildConventions は config / pipeline 由来の共通規約を集める。
 func buildConventions() *apidoc.Conventions {
 	conv := &apidoc.Conventions{
-		CommonError:       apidoc.CommonErrorSchema(reflect.TypeOf(httpdto.Error{})),
-		GlobalMiddlewares: []string{"logging", "recovery", "verify-body-parsable", "cors"},
+		CommonError: apidoc.CommonErrorSchema(reflect.TypeOf(httpdto.Error{})),
+		// Taken from where the chain is built rather than restated here, so the
+		// two cannot say different things. See http.GlobalMiddlewareNames.
+		GlobalMiddlewares: apphttp.GlobalMiddlewareNames,
 	}
 
 	params, err := registry.ModuleParams("default")

@@ -27,10 +27,16 @@ type SecurityScheme struct {
 	Scheme string `json:"scheme,omitempty"`
 	// BearerFormat は bearer トークンの形式(例 "JWT")。
 	BearerFormat string `json:"bearer_format,omitempty"`
-	// In と HeaderName は Type=="apiKey" のときの受け取り場所。
-	// In が "cookie" のとき、HeaderName は Cookie 名を指す。
-	In         string `json:"in,omitempty"`
-	HeaderName string `json:"header_name,omitempty"`
+	// In は Type=="apiKey" の資格情報が乗る場所("header" / "cookie" / "query")。
+	In string `json:"in,omitempty"`
+	// ParameterName はその乗り物の名前 —— In に応じてヘッダ名・Cookie 名・
+	// クエリパラメータ名を指す。
+	//
+	// Cookie のスキームができるまでは HeaderName という名前だったが、それでは
+	// 値の半分について嘘になる(セッション ID を「ヘッダに入れろ」と読める文書が
+	// 生成される)。出力先の2形式はどちらもこの値を `name` と呼び、何の名前かは
+	// `in` に決めさせているので、中立な名前がそのまま忠実な写しにもなる。
+	ParameterName string `json:"parameter_name,omitempty"`
 	// Description は呼び出し元向けの補足。
 	Description string `json:"description,omitempty"`
 }
@@ -41,8 +47,25 @@ const (
 	SecuritySchemeTypeAPIKey = "apiKey"
 	SecuritySchemeInHeader   = "header"
 	SecuritySchemeInCookie   = "cookie"
+	SecuritySchemeInQuery    = "query"
 	SecuritySchemeBearer     = "bearer"
 	BearerFormatJWT          = "JWT"
+)
+
+// GlobalMiddlewares に載せる名前。
+//
+// MiddlewareCSRF は生成側で照合される: Cookie で資格情報を運ぶ API の
+// 生成ドキュメントは、このミドルウェアが実際に名前を連ねているときだけ
+// 「サーバがクロスサイトの状態変更を拒否する」と書く。外したアプリが
+// 持っていない保護を約束されないようにするための対応であり、
+// この文字列は encli 側の apispec.MiddlewareCSRF と一致していなければならない。
+const (
+	MiddlewareLogging            = "logging"
+	MiddlewareRecovery           = "recovery"
+	MiddlewareVerifyBodyParsable = "verify-body-parsable"
+	MiddlewareCORS               = "cors"
+	MiddlewareCSRF               = "csrf"
+	MiddlewareAuth               = "auth"
 )
 
 // CORS は CONVENTIONS の CORS 規約(config の文字列表現をそのまま持つ)。

@@ -64,19 +64,19 @@ func describeScheme(name string, auth *appconfig.Auth) apidoc.SecurityScheme {
 		}
 	case authkit.SchemeAPIKey:
 		return apidoc.SecurityScheme{
-			Name:        authkit.SchemeAPIKey,
-			Type:        apidoc.SecuritySchemeTypeAPIKey,
-			In:          apidoc.SecuritySchemeInHeader,
-			HeaderName:  apiKeyHeader(auth),
-			Description: "Key issued to a machine caller",
+			Name:          authkit.SchemeAPIKey,
+			Type:          apidoc.SecuritySchemeTypeAPIKey,
+			In:            apidoc.SecuritySchemeInHeader,
+			ParameterName: apiKeyHeader(auth),
+			Description:   "Key issued to a machine caller",
 		}
 	case authkit.SchemeSession:
 		return apidoc.SecurityScheme{
-			Name:        authkit.SchemeSession,
-			Type:        apidoc.SecuritySchemeTypeAPIKey,
-			In:          apidoc.SecuritySchemeInCookie,
-			HeaderName:  sessionCookieName(auth),
-			Description: "Session cookie, obtained by trading a token at POST " + authapi.SessionPath,
+			Name:          authkit.SchemeSession,
+			Type:          apidoc.SecuritySchemeTypeAPIKey,
+			In:            apidoc.SecuritySchemeInCookie,
+			ParameterName: sessionCookieName(auth),
+			Description:   "Session cookie, obtained by trading a token at POST " + authapi.SessionPath,
 		}
 	default:
 		panic(fmt.Sprintf(

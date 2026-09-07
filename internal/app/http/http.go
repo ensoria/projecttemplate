@@ -10,6 +10,7 @@ import (
 	"github.com/ensoria/config/pkg/registry"
 	"github.com/ensoria/ensoria-template/internal/app/http/dto"
 	"github.com/ensoria/ensoria-template/internal/middleware"
+	"github.com/ensoria/ensoria-template/internal/plamo/apidoc"
 	"github.com/ensoria/ensoria-template/internal/plamo/authkit"
 	"github.com/ensoria/ensoria-template/internal/plamo/dikit"
 	"github.com/ensoria/ensoria-template/internal/plamo/restkit"
@@ -180,6 +181,28 @@ func globalMiddlewares(
 		middleware.CSRF(crossOrigin),
 		middleware.Auth(verifier),
 	}
+}
+
+// GlobalMiddlewareNames names, in order, what the chain above installs.
+//
+// It lives here rather than where it is read because it is a second statement
+// of the same fact, and the two are only true together. The generated
+// documentation is what reads it, and one entry in particular is acted on: a
+// document describing a cookie-borne credential explains the cross-origin guard
+// only when this list names it. So a name missing here understates what the
+// application does, and a name left behind after its middleware was removed
+// promises a protection that is gone — which is the worse of the two.
+//
+// The list drifted once already, staying at four entries after CSRF and Auth
+// joined the chain. A spec below pins the two together by length, which is the
+// part a compiler cannot check.
+var GlobalMiddlewareNames = []string{
+	apidoc.MiddlewareLogging,
+	apidoc.MiddlewareRecovery,
+	apidoc.MiddlewareVerifyBodyParsable,
+	apidoc.MiddlewareCORS,
+	apidoc.MiddlewareCSRF,
+	apidoc.MiddlewareAuth,
 }
 
 // InjectHTTPModules tags the first parameter as the HTTP module group. The

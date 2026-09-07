@@ -72,13 +72,13 @@ var _ = Describe("securitySchemes", func() {
 		Expect(schemes).To(HaveLen(1))
 		Expect(schemes[0].Name).To(Equal(authkit.SchemeAPIKey))
 		Expect(schemes[0].In).To(Equal(apidoc.SecuritySchemeInHeader))
-		Expect(schemes[0].HeaderName).To(Equal("X-Tenant-Key"))
+		Expect(schemes[0].ParameterName).To(Equal("X-Tenant-Key"))
 	})
 
 	It("falls back to the header the verifier falls back to", func() {
 		schemes := securitySchemes(&appconfig.Auth{APIKeys: []string{"k"}})
 
-		Expect(schemes[0].HeaderName).To(Equal(appconfig.DefaultAPIKeyHeader))
+		Expect(schemes[0].ParameterName).To(Equal(appconfig.DefaultAPIKeyHeader))
 	})
 
 	// A caller can still present a key when the application verifies it
@@ -98,7 +98,7 @@ var _ = Describe("securitySchemes", func() {
 		Expect(schemes[0].Name).To(Equal(authkit.SchemeSession))
 		Expect(schemes[0].Type).To(Equal(apidoc.SecuritySchemeTypeAPIKey))
 		Expect(schemes[0].In).To(Equal(apidoc.SecuritySchemeInCookie))
-		Expect(schemes[0].HeaderName).To(Equal(appconfig.DefaultSessionCookieName))
+		Expect(schemes[0].ParameterName).To(Equal(appconfig.DefaultSessionCookieName))
 		Expect(schemes[0].Description).NotTo(BeEmpty())
 	})
 
@@ -110,7 +110,7 @@ var _ = Describe("securitySchemes", func() {
 
 		schemes := securitySchemes(&appconfig.Auth{Session: session})
 
-		Expect(schemes[0].HeaderName).To(Equal("app_session"))
+		Expect(schemes[0].ParameterName).To(Equal("app_session"))
 	})
 
 	Describe("agreement with the other derivations of the same question", func() {

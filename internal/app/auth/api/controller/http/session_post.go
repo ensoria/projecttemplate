@@ -51,6 +51,8 @@ func NewCreateSession(sessions sessionkit.Store, cookies *sessionkit.Cookies) *r
 		},
 		FieldDocs: map[string]string{
 			"persistent": "Whether to keep the caller signed in after the browser closes.",
+			"subject":    "Who the session belongs to, taken from the token that was exchanged.",
+			"expires_at": "When the session stops working however active it has been.",
 		},
 		Behavior: restkit.BehaviorSpec{
 			SideEffects: []string{
